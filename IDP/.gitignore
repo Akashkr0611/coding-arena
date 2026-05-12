@@ -1,0 +1,25 @@
+# Root
+node_modules/
+*.sqlite
+*.db
+.env
+.DS_Store
+
+# Backend
+backend/node_modules/
+backend/dist/
+backend/.env
+backend/database.sqlite
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# TypeScript cache
+*.tsbuildinfo
