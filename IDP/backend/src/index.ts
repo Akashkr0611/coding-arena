@@ -12,7 +12,14 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: (origin, callback) => {
+    // Allow localhost for dev, any vercel.app domain for production, and same-origin
+    const allowed = !origin || 
+      origin.includes('localhost') || 
+      origin.includes('vercel.app') ||
+      origin === process.env.FRONTEND_URL;
+    callback(null, allowed);
+  },
   credentials: true
 }));
 app.use(express.json());

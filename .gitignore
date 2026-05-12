@@ -1,0 +1,28 @@
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# Environment variables — NEVER commit real keys
+.env
+**/.env
+!**/.env.example
+
+# SQLite databases (allow the pre-seeded backend one for Vercel)
+/database.sqlite
+*.db
+
+# Build output
+dist/
+**/dist/
+.next/
+
+# Logs
+*.log
+npm-debug.log*
+
+# TypeScript cache
+*.tsbuildinfo
+
+# OS files
+.DS_Store
+Thumbs.db
