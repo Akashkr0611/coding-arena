@@ -3,10 +3,8 @@
   "version": "1.0.0",
   "description": "CoastWise India - Full Stack Beach Intelligence App",
   "scripts": {
-    "build": "npm run build:frontend && npm run build:backend",
-    "build:frontend": "cd frontend && npm install && npm run build",
-    "build:backend": "cd backend && npm install && npm run build",
-    "start": "node backend/dist/index.js",
+    "build": "cd frontend && npm install && npm run build",
+    "start": "cd backend && npm install && npm run build && npm start",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "postinstall": "cd backend && npm install"
