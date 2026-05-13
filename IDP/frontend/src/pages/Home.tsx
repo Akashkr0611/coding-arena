@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import L from 'leaflet';
@@ -7,11 +7,11 @@ import { X, Cloud, Navigation, ShieldAlert, Route as RouteIcon } from 'lucide-re
 
 // Custom icons based on safety
 const createDotIcon = (color: string) => {
-  return new L.divIcon({
+  return L.divIcon({
     className: 'custom-dot-icon',
     html: `<div style="background-color: ${color}; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-    iconSize: [14, 14],
-    iconAnchor: [7, 7]
+    iconSize: [14, 14] as L.PointExpression,
+    iconAnchor: [7, 7] as L.PointExpression
   });
 };
 
@@ -24,9 +24,13 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [selectedBeach, setSelectedBeach] = useState<any>(null);
   const [liveData, setLiveData] = useState<any>(null);
+  const [tripBeaches, setTripBeaches] = useState<number[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
+    const trip = JSON.parse(localStorage.getItem('trip') || '[]');
+    setTripBeaches(trip.map((t: any) => t.id));
+
     apiClient.get('/beaches')
       .then(res => {
         setBeaches(res.data);
@@ -102,9 +106,7 @@ export default function Home() {
         lon: beach.coordinates?.coordinates[0] || 0 
       });
       localStorage.setItem('trip', JSON.stringify(trip));
-      alert(`${beach.name} added to your trip!`);
-    } else {
-      alert(`${beach.name} is already in your trip.`);
+      setTripBeaches(prev => [...prev, beach.id]);
     }
   };
 
@@ -216,12 +218,17 @@ export default function Home() {
               </div>
 
               <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                <button 
-                  onClick={() => addToTrip(selectedBeach)}
-                  style={{ flex: 1, background: '#38bdf8', color: '#0f172a', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                >
-                  <RouteIcon size={18} style={{ marginRight: '8px' }} /> Add to Trip
-                </button>
+                {(() => {
+                  const isAdded = tripBeaches.includes(selectedBeach.id);
+                  return (
+                    <button 
+                      onClick={() => !isAdded && addToTrip(selectedBeach)}
+                      style={{ flex: 1, background: isAdded ? '#10b981' : '#38bdf8', color: '#0f172a', border: 'none', padding: '10px', borderRadius: '8px', cursor: isAdded ? 'default' : 'pointer', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                    >
+                      {isAdded ? 'Added to Trip Planner' : <><RouteIcon size={18} style={{ marginRight: '8px' }} /> Add to Trip</>}
+                    </button>
+                  );
+                })()}
                 <button 
                   onClick={() => navigate(`/beach/${selectedBeach.id}`)}
                   style={{ flex: 1, background: '#334155', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}

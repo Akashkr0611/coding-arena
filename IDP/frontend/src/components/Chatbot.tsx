@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send } from 'lucide-react';
-import apiClient from '../api/client';
+
 
 export default function Chatbot() {
   const [open, setOpen] = useState(false);
@@ -38,7 +38,7 @@ export default function Chatbot() {
           content: m.text
       }));
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/chat`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

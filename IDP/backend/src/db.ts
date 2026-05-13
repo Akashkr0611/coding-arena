@@ -2,7 +2,8 @@ import { Sequelize } from 'sequelize';
 import dotenv from 'dotenv';
 import path from 'path';
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config(); // fallback
 
 const isPostgres = !!process.env.DB_HOST;
 

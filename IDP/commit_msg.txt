@@ -1,0 +1,7 @@
+chore: add Vercel deployment config for frontend and backend
+
+- backend/vercel.json: serve Express via @vercel/node serverless
+- frontend/vercel.json: SPA rewrites for React Router
+- CORS updated to accept all vercel.app origins
+- Chatbot API URL reads from VITE_API_URL env var
+- Pre-seeded SQLite database included for Vercel read access
