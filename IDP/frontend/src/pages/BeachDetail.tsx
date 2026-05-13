@@ -19,71 +19,85 @@ export default function BeachDetail() {
       const parsedId = parseInt(id || '1', 10);
       const uv = beach.weather?.[0]?.uv_index || (5 + (parsedId % 3));
       const crowd = parsedId % 3 === 0 ? 'High' : parsedId % 2 === 0 ? 'Moderate' : 'Low';
-      
       setData({
         id,
         name: beach.name || 'Unknown Beach',
         scores: scoresRes.data,
-        weather: { 
-          temperature: beach.weather?.[0]?.temperature || (28 + parsedId % 5), 
-          wind: beach.weather?.[0]?.wind_speed || (10 + parsedId % 10), 
-          uv: uv
+        weather: {
+          temperature: beach.weather?.[0]?.temperature || (28 + parsedId % 5),
+          wind: beach.weather?.[0]?.wind_speed || (10 + parsedId % 10),
+          uv
         },
         tide: { waveHeight: beach.tides?.[0]?.wave_height || 1.0 },
         safety: { ripCurrentRisk: beach.safety?.rip_current_risk || 'Moderate' },
-        crowd: crowd,
+        crowd,
         alerts: alertsRes.data.map((a: any) => a.message)
       });
-    }).catch(err => {
-      console.error('Error fetching beach details:', err);
-    });
+    }).catch(err => console.error('Error fetching beach details:', err));
   }, [id]);
 
-  if (!data) return <div className="loading">Loading Details...</div>;
+  if (!data) {
+    return (
+      <div className="loading" style={{ paddingTop: 80 }}>
+        <div className="loading-spinner" />
+        Loading beach details...
+      </div>
+    );
+  }
 
-  const scoreColor = data.scores[activeTab] >= 80 ? '#10b981' : data.scores[activeTab] >= 50 ? '#f59e0b' : '#ef4444';
+  const score = Math.round(data.scores[activeTab] ?? 60);
+  const scoreColor = score >= 80 ? 'var(--safe)' : score >= 50 ? 'var(--moderate)' : 'var(--danger)';
+  const scoreBg    = score >= 80 ? 'rgba(34,197,94,0.1)' : score >= 50 ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)';
 
-  const getUvBadge = (uv: number) => {
-    const label = uv <= 2 ? 'Low' : uv <= 5 ? 'Moderate' : uv <= 7 ? 'High' : 'Extreme';
-    const color = uv <= 2 ? '#10b981' : uv <= 5 ? '#f59e0b' : '#ef4444';
-    return <span className="badge" style={{ background: `${color}20`, color }}>{label} ({uv})</span>;
-  };
+  const getUvBadgeClass = (uv: number) => uv <= 2 ? 'badge-safe' : uv <= 5 ? 'badge-mod' : 'badge-danger';
+  const getUvLabel      = (uv: number) => uv <= 2 ? 'Low' : uv <= 5 ? 'Moderate' : uv <= 7 ? 'High' : 'Extreme';
+  const getCrowdClass   = (c: string) => c === 'Low' ? 'badge-safe' : c === 'Moderate' ? 'badge-mod' : 'badge-danger';
 
-  const getCrowdBadge = (crowd: string) => {
-    const color = crowd === 'Low' ? '#10b981' : crowd === 'Moderate' ? '#f59e0b' : '#ef4444';
-    const icon = crowd === 'Low' ? '🟢' : crowd === 'Moderate' ? '🟡' : '🔴';
-    return <span className="badge" style={{ background: `${color}20`, color }}>{icon} {crowd}</span>;
-  };
+  const tabs = ['swimming', 'surfing', 'relaxing', 'family'];
 
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px', cursor: 'pointer', color: '#9ca3af' }} onClick={() => navigate(-1)}>
-        <ArrowLeft size={24} style={{ marginRight: '8px' }} />
-        <h2 style={{ margin: 0, color: '#ffffff' }}>{data.name}</h2>
-      </div>
+    <div className="page-wrapper">
+      {/* Back nav */}
+      <button
+        onClick={() => navigate(-1)}
+        className="btn btn-ghost"
+        style={{ marginBottom: 24, display: 'inline-flex' }}
+      >
+        <ArrowLeft size={16} />
+        Back
+      </button>
 
-      <div className="card" style={{ textAlign: 'center' }}>
-        <h3 className="header-subtitle" style={{ color: 'white' }}>Suitability Index</h3>
-        <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 16px auto', borderRadius: '50%', border: `12px solid ${scoreColor}40`, borderTopColor: scoreColor, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <span style={{ fontSize: '36px', fontWeight: 'bold', color: 'white' }}>{Math.round(data.scores[activeTab])}</span>
+      <h1 className="header-title" style={{ marginBottom: 24 }}>{data.name}</h1>
+
+      {/* Suitability card */}
+      <div className="card" style={{ textAlign: 'center', marginBottom: 20 }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16, fontWeight: 500 }}>
+          SUITABILITY INDEX
+        </p>
+
+        {/* Circular score */}
+        <div style={{
+          position: 'relative',
+          width: 120, height: 120,
+          margin: '0 auto 20px',
+          borderRadius: '50%',
+          background: scoreBg,
+          border: `6px solid ${scoreColor}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>
+          <div>
+            <div style={{ fontSize: 38, fontWeight: 800, color: scoreColor, lineHeight: 1 }}>{score}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>/100</div>
+          </div>
         </div>
-        
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '24px', flexWrap: 'wrap' }}>
-          {['swimming', 'surfing', 'relaxing', 'family'].map(tab => (
+
+        {/* Tab selector */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+          {tabs.map(tab => (
             <button
               key={tab}
+              className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
               onClick={() => setActiveTab(tab)}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '20px',
-                border: 'none',
-                cursor: 'pointer',
-                backgroundColor: activeTab === tab ? '#38bdf8' : 'rgba(255,255,255,0.05)',
-                color: activeTab === tab ? '#0f172a' : '#9ca3af',
-                fontWeight: 'bold',
-                textTransform: 'capitalize',
-                transition: 'all 0.2s'
-              }}
             >
               {tab}
             </button>
@@ -91,56 +105,94 @@ export default function BeachDetail() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        <div className="card" style={{ flex: 1, minWidth: '200px', marginBottom: 0 }}>
-          <Cloud color="#38bdf8" size={28} />
-          <p style={{ color: '#9ca3af', margin: '12px 0 8px 0' }}>Weather</p>
-          <h2 style={{ margin: '0 0 12px 0', fontSize: '32px' }}>{data.weather.temperature}°C</h2>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: '#9ca3af' }}>Wind</span>
+      {/* Weather + Marine grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 20 }}>
+        {/* Weather card */}
+        <div className="card" style={{ marginBottom: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+            <div style={{ width: 40, height: 40, background: 'rgba(20,184,166,0.1)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Cloud size={20} color="var(--teal)" />
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>WEATHER</span>
+          </div>
+          <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>
+            {data.weather.temperature}°C
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
+            <span style={{ color: 'var(--text-secondary)' }}>Wind Speed</span>
             <strong>{Math.round(data.weather.wind)} km/h</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: '#9ca3af' }}>UV Index</span>
-            {getUvBadge(data.weather.uv)}
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
+            <span style={{ color: 'var(--text-secondary)' }}>UV Index</span>
+            <span className={`badge ${getUvBadgeClass(data.weather.uv)}`}>
+              {getUvLabel(data.weather.uv)} ({data.weather.uv})
+            </span>
           </div>
         </div>
-        
-        <div className="card" style={{ flex: 1, minWidth: '200px', marginBottom: 0 }}>
-          <Navigation color="#38bdf8" size={28} />
-          <p style={{ color: '#9ca3af', margin: '12px 0 8px 0' }}>Marine & Crowd</p>
-          <h2 style={{ margin: '0 0 12px 0', fontSize: '32px' }}>{data.tide.waveHeight.toFixed(1)}m <span style={{fontSize: '16px', color:'#9ca3af'}}>wave</span></h2>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: '#9ca3af' }}>Tide Level</span>
+
+        {/* Marine & Crowd card */}
+        <div className="card" style={{ marginBottom: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+            <div style={{ width: 40, height: 40, background: 'rgba(11,60,93,0.08)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Navigation size={20} color="var(--ocean-deep)" />
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>MARINE & CROWD</span>
+          </div>
+          <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>
+            {data.tide.waveHeight.toFixed(1)}m
+            <span style={{ fontSize: 16, color: 'var(--text-muted)', fontWeight: 500 }}> wave</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
+            <span style={{ color: 'var(--text-secondary)' }}>Tide Level</span>
             <strong>~1.5m</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: '#9ca3af' }}>Crowd</span>
-            {getCrowdBadge(data.crowd)}
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
+            <span style={{ color: 'var(--text-secondary)' }}>Crowd Level</span>
+            <span className={`badge ${getCrowdClass(data.crowd)}`}>{data.crowd}</span>
           </div>
         </div>
       </div>
 
+      {/* Safety & Alerts card */}
       <div className="card">
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
-          <ShieldAlert color="#f59e0b" style={{ marginRight: '8px' }} />
-          <h3 style={{ margin: 0, fontSize: '20px' }}>Safety & Alerts</h3>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <span style={{ color: '#9ca3af' }}>Rip Current Risk</span>
-          <strong style={{ color: data.safety.ripCurrentRisk === 'High' ? '#ef4444' : '#10b981' }}>{data.safety.ripCurrentRisk}</strong>
-        </div>
-        
-        {data.alerts.length > 0 && (
-          <div style={{ marginTop: '16px' }}>
-            {data.alerts.map((alert: string, idx: number) => (
-              <div key={idx} style={{ backgroundColor: '#ef444420', padding: '16px', borderRadius: '8px', color: '#ef4444', marginTop: '8px', display: 'flex', alignItems: 'center', border: '1px solid #ef444440' }}>
-                <AlertTriangle size={20} style={{ marginRight: '12px' }} />
-                {alert}
-              </div>
-            ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+          <div style={{ width: 40, height: 40, background: 'rgba(245,158,11,0.1)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ShieldAlert size={20} color="var(--moderate)" />
           </div>
-        )}
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+            Safety &amp; Alerts
+          </h3>
+        </div>
+
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: '14px 16px',
+          background: 'var(--bg)',
+          borderRadius: 'var(--radius-sm)',
+          border: '1px solid var(--border)',
+          marginBottom: data.alerts.length > 0 ? 14 : 0
+        }}>
+          <span style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Rip Current Risk</span>
+          <span className={`badge ${data.safety.ripCurrentRisk === 'High' ? 'badge-danger' : data.safety.ripCurrentRisk === 'Moderate' ? 'badge-mod' : 'badge-safe'}`}>
+            {data.safety.ripCurrentRisk}
+          </span>
+        </div>
+
+        {data.alerts.length > 0 && data.alerts.map((alert: string, idx: number) => (
+          <div key={idx} style={{
+            background: 'rgba(239,68,68,0.06)',
+            border: '1px solid rgba(239,68,68,0.2)',
+            padding: '14px 16px',
+            borderRadius: 'var(--radius-sm)',
+            color: 'var(--danger)',
+            marginTop: 8,
+            display: 'flex', alignItems: 'flex-start', gap: 10,
+            fontSize: 14
+          }}>
+            <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: 1 }} />
+            {alert}
+          </div>
+        ))}
       </div>
     </div>
   );

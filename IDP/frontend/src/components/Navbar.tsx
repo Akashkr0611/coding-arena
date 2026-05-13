@@ -1,36 +1,43 @@
 import { NavLink } from 'react-router-dom';
-import { Map, Star, AlertTriangle, User, Route as RouteIcon, LayoutDashboard } from 'lucide-react';
+import { Map, Star, AlertTriangle, User, Route as RouteIcon, LayoutDashboard, Waves } from 'lucide-react';
+
+const navLinks = [
+  { to: '/dashboard',      icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
+  { to: '/',               icon: <Map size={18} />,             label: 'Explore Map' },
+  { to: '/recommendations',icon: <Star size={18} />,            label: 'For You' },
+  { to: '/trip-planner',   icon: <RouteIcon size={18} />,       label: 'Trip Planner' },
+  { to: '/alerts',         icon: <AlertTriangle size={18} />,   label: 'Alerts' },
+  { to: '/profile',        icon: <User size={18} />,            label: 'Preferences' },
+];
 
 export default function Sidebar() {
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <h1>CoastWise</h1>
+        <h1>
+          <Waves size={18} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle', color: 'var(--teal)' }} />
+          Coast<span>Wise</span>
+        </h1>
+        <div className="sidebar-subtitle">India Beach Intelligence</div>
       </div>
-      <NavLink to="/dashboard" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-        <LayoutDashboard size={20} />
-        <span>Dashboard</span>
-      </NavLink>
-      <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-        <Map size={20} />
-        <span>Explore Map</span>
-      </NavLink>
-      <NavLink to="/recommendations" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-        <Star size={20} />
-        <span>For You</span>
-      </NavLink>
-      <NavLink to="/trip-planner" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-        <RouteIcon size={20} />
-        <span>Trip Planner</span>
-      </NavLink>
-      <NavLink to="/alerts" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-        <AlertTriangle size={20} />
-        <span>Alerts</span>
-      </NavLink>
-      <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-        <User size={20} />
-        <span>Preferences</span>
-      </NavLink>
+
+      <nav className="sidebar-nav">
+        {navLinks.map(({ to, icon, label }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={to === '/'}
+            className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+          >
+            {icon}
+            <span>{label}</span>
+          </NavLink>
+        ))}
+      </nav>
+
+      <div className="sidebar-footer">
+        © 2025 CoastWise · v2.0
+      </div>
     </div>
   );
 }

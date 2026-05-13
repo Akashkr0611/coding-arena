@@ -1,0 +1,12 @@
+feat: CoastWise India v1.0
+
+- Gemini 2.5 Flash AI chatbot with context-aware beach recommendations
+- Conversation history memory (last 5 messages)
+- PDF itinerary export with graphical comparison charts (jsPDF)
+- Interactive Leaflet map with color-coded dot markers
+- Trip Planner with Haversine distance sorting
+- Recommendations page redesigned with dark glassmorphism cards
+- Full dark theme UI across all pages
+- Real-time beach data integration
+- SQLite backend with 25+ Indian beaches
+- Secure API key management via environment variables
