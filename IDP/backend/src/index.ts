@@ -66,8 +66,8 @@ const startServer = async () => {
     await sequelize.sync({ force: false });
     console.log('✅ Models synced.');
 
-    app.listen(PORT, () => {
-      console.log(`🚀 CoastWise server running at http://localhost:${PORT}`);
+    app.listen(PORT as number, "0.0.0.0", () => {
+      console.log(`🚀 CoastWise server running at http://0.0.0.0:${PORT}`);
     });
   } catch (error) {
     console.error('❌ Unable to connect to the database:', error);

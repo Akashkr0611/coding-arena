@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "nodemon --exec ts-node src/index.ts",
-    "build": "tsc",
+    "build": "cd ../frontend && npm install && npm run build && cd ../backend && tsc",
     "test": "jest",
     "test:unit": "jest tests/suitabilityService.test.ts --no-coverage",
     "test:api": "jest tests/api.test.ts --no-coverage --runInBand"
