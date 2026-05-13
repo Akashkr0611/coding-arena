@@ -13,12 +13,12 @@ export default defineConfig({
     // Dev proxy: forwards API calls to Express backend so you can use one URL during development
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
       },
       '/health': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
       },
