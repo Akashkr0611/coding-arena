@@ -71,11 +71,22 @@ export default function TripPlanner() {
     if (navigator.geolocation) {
       setLoadingNearby(true);
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
           setUserLocation({ lat, lon });
-          findNearbyBeaches(lat, lon);
+          
+          let state = undefined;
+          try {
+            const apiKey = "017c2ec54d3a8202be9fefb6e97f3edf";
+            const res = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lon}&key=${apiKey}`);
+            const data = await res.json();
+            state = data.results[0]?.components?.state;
+          } catch (e) {
+            console.error("Reverse geocoding failed", e);
+          }
+
+          findNearbyBeaches(lat, lon, state);
         },
         (error) => {
           console.error("Location error:", error);
@@ -103,20 +114,36 @@ export default function TripPlanner() {
     localStorage.setItem('trip', JSON.stringify(updated));
   };
 
-  const findNearbyBeaches = async (userLat: number, userLon: number) => {
+  const findNearbyBeaches = async (userLat: number, userLon: number, uState?: string) => {
     try {
       const lat1 = Number(userLat);
       const lon1 = Number(userLon);
 
-      const beachesWithDist = beachesJson.map((b: any) => ({
+      let otherNearestRaw = beachesJson.map((b: any) => ({
         ...b,
         haversineDist: calculateDistance(lat1, lon1, b.lat, b.lon)
-      })).sort((a: any, b: any) => a.haversineDist - b.haversineDist).slice(0, 5);
+      })).sort((a: any, b: any) => a.haversineDist - b.haversineDist);
+
+      let nearestInState: any = null;
+      if (uState) {
+        const sameStateBeaches = otherNearestRaw.filter((b: any) => b.state?.toLowerCase() === uState.toLowerCase());
+        if (sameStateBeaches.length > 0) {
+          nearestInState = sameStateBeaches[0];
+          otherNearestRaw = otherNearestRaw.filter((b: any) => b.id !== nearestInState.id);
+        }
+      }
+
+      const topBeaches = [];
+      if (nearestInState) {
+        nearestInState.isBestLocal = true;
+        topBeaches.push(nearestInState);
+      }
+      topBeaches.push(...otherNearestRaw.slice(0, 5 - topBeaches.length));
       
       console.log("User:", lat1, lon1);
-      console.log("Nearest beaches:", beachesWithDist);
+      console.log("Nearest beaches:", topBeaches);
       
-      const routesPromises = beachesWithDist.map(async (beach: any) => {
+      const routesPromises = topBeaches.map(async (beach: any) => {
         try {
           const routeRes = await apiClient.post('/route', {
             user_lat: userLat, user_lon: userLon,
@@ -152,34 +179,31 @@ export default function TripPlanner() {
 
   const exportPDF = async () => {
     window.scrollTo(0, 0);
-    const element = document.getElementById("trip-planner-page");
-    if (!element) return;
+    const summary = document.getElementById("trip-summary");
+    const graph = document.getElementById("graph-section");
+    if (!summary || !graph) return;
     
     // Briefly hide export button for cleaner PDF
     const exportBtn = document.getElementById("export-btn");
     if (exportBtn) exportBtn.style.display = 'none';
 
     try {
-      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-      const imgData = canvas.toDataURL("image/png");
-
       const pdf = new jsPDF("p", "mm", "a4");
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      // PAGE 1
+      const canvas1 = await html2canvas(summary, { scale: 2, useCORS: true });
+      const img1 = canvas1.toDataURL("image/png");
+      const imgWidth1 = 210;
+      const imgHeight1 = (canvas1.height * imgWidth1) / canvas1.width;
+      pdf.addImage(img1, "PNG", 0, 0, imgWidth1, imgHeight1);
 
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
+      // PAGE 2
+      const canvas2 = await html2canvas(graph, { scale: 2, useCORS: true });
+      const img2 = canvas2.toDataURL("image/png");
+      const imgWidth2 = 210;
+      const imgHeight2 = (canvas2.height * imgWidth2) / canvas2.width;
+      pdf.addPage();
+      pdf.addImage(img2, "PNG", 0, 0, imgWidth2, imgHeight2);
 
       pdf.save("trip-plan.pdf");
     } catch (err) {
@@ -228,6 +252,7 @@ export default function TripPlanner() {
         </button>
       </div>
 
+      <div id="trip-summary">
       {/* ── User Location Search ── */}
       <div className="card" style={{ marginBottom: 20, padding: 20 }}>
         <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -255,7 +280,11 @@ export default function TripPlanner() {
                   padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius)', background: 'rgba(0,0,0,0.02)',
                   position: 'relative'
                 }}>
-                  {idx === 0 && <span style={{ position: 'absolute', top: -10, right: 10, background: 'var(--teal)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>Closest Match</span>}
+                  {beach.isBestLocal ? (
+                    <span style={{ position: 'absolute', top: -10, right: 10, background: '#F59E0B', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>🌟 Best Local Option</span>
+                  ) : idx === 0 && !trip.find((t: any) => t.isBestLocal) ? (
+                    <span style={{ position: 'absolute', top: -10, right: 10, background: 'var(--teal)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>Closest Match</span>
+                  ) : null}
                   <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{beach.name}</div>
                   <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 10 }}>{beach.state || beach.location}</div>
                   <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 13 }}>
@@ -412,7 +441,9 @@ export default function TripPlanner() {
           </div>
         </div>
       </div>
+      </div>
 
+      <div id="graph-section">
       {/* ── Graphical Analysis ── */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
@@ -533,6 +564,7 @@ export default function TripPlanner() {
             Always review the safety parameters in the table above and check local lifeguard availability before your visit.
           </p>
         </div>
+      </div>
       </div>
     </div>
   );
