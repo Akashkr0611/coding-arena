@@ -108,6 +108,11 @@ export default function Home() {
   const statesList = ['All', ...new Set(beaches.map((b: any) => b.state))];
   const filteredBeaches = selectedState === 'All' ? beaches : beaches.filter((b: any) => b.state === selectedState);
 
+  const indiaBounds = [
+    [6.5, 68.0],
+    [37.5, 97.5]
+  ] as L.LatLngBoundsExpression;
+
   return (
     <div style={{ height: '100%', width: '100%', position: 'relative' }}>
       <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 1000, background: 'var(--bg)', padding: '6px 12px', borderRadius: 'var(--radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -119,6 +124,11 @@ export default function Home() {
       <MapContainer
         center={[20.5937, 78.9629]}
         zoom={5}
+        minZoom={5}
+        maxZoom={12}
+        maxBounds={indiaBounds}
+        maxBoundsViscosity={1.0}
+        bounceAtZoomLimits={false}
         style={{ height: '100%', width: '100%', zIndex: 0 }}
       >
         <TileLayer
