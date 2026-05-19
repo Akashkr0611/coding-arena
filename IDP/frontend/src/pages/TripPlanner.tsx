@@ -47,14 +47,31 @@ export default function TripPlanner() {
   const [trip, setTrip] = useState<any[]>([]);
   const [param1, setParam1] = useState('Suitability Score');
   const [param2, setParam2] = useState('Temperature');
-  
-  const [userCity, setUserCity] = useState('');
+  const [locationError, setLocationError] = useState<string | null>(null);
   const [nearbyBeaches, setNearbyBeaches] = useState<any[]>([]);
   const [loadingNearby, setLoadingNearby] = useState(false);
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('trip') || '[]');
     setTrip(sortTripByDistance(saved));
+
+    if (navigator.geolocation) {
+      setLoadingNearby(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          findNearbyBeaches(lat, lon);
+        },
+        (error) => {
+          console.error("Location error:", error);
+          setLocationError("Enable location to see nearby beaches");
+          setLoadingNearby(false);
+        }
+      );
+    } else {
+      setLocationError("Geolocation is not supported by this browser.");
+    }
   }, []);
 
   const addToTrip = (beach: any) => {
@@ -72,15 +89,8 @@ export default function TripPlanner() {
     localStorage.setItem('trip', JSON.stringify(updated));
   };
 
-  const findNearbyBeaches = async () => {
-    if (!userCity) return;
-    setLoadingNearby(true);
-    setNearbyBeaches([]);
+  const findNearbyBeaches = async (userLat: number, userLon: number) => {
     try {
-      const geoRes = await apiClient.get(`/geocode?city=${userCity}`);
-      const userLat = geoRes.data.lat;
-      const userLon = geoRes.data.lon;
-      
       const beachesWithDist = beachesJson.map((b: any) => ({
         ...b,
         haversineDist: calculateDistance(userLat, userLon, b.lat, b.lon)
@@ -102,7 +112,6 @@ export default function TripPlanner() {
       setNearbyBeaches(finalNearby);
     } catch (error) {
       console.error('Failed to find beaches:', error);
-      alert('Could not locate the city. Please try a different name.');
     } finally {
       setLoadingNearby(false);
     }
@@ -207,24 +216,18 @@ export default function TripPlanner() {
         <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
           <Search size={18} color="var(--teal)" /> Find Nearest Beaches
         </h3>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <input 
-            type="text" 
-            className="form-input" 
-            placeholder="Enter your city (e.g., Mumbai, Bangalore)" 
-            value={userCity}
-            onChange={(e) => setUserCity(e.target.value)}
-            style={{ flex: 1, minWidth: 200 }}
-            onKeyDown={(e) => e.key === 'Enter' && findNearbyBeaches()}
-          />
-          <button 
-            className="btn btn-primary" 
-            onClick={findNearbyBeaches}
-            disabled={loadingNearby || !userCity.trim()}
-          >
-            {loadingNearby ? 'Searching...' : 'Find Beaches'}
-          </button>
-        </div>
+        
+        {loadingNearby && (
+          <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>
+             Locating you and finding nearest beaches...
+          </div>
+        )}
+
+        {locationError && !loadingNearby && (
+          <div style={{ color: 'var(--danger)', fontSize: 14, background: 'rgba(239,68,68,0.1)', padding: '10px 14px', borderRadius: 6 }}>
+            {locationError}
+          </div>
+        )}
         
         {nearbyBeaches.length > 0 && (
           <div style={{ marginTop: 20 }}>
