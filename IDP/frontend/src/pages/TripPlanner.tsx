@@ -5,14 +5,26 @@ import html2canvas from 'html2canvas';
 import apiClient from '../api/client';
 import beachesJson from '../data/beaches.json';
 
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+function calculateDistance(lat1Raw: number, lon1Raw: number, lat2Raw: number, lon2Raw: number) {
+  const lat1 = Number(lat1Raw);
+  const lon1 = Number(lon1Raw);
+  const lat2 = Number(lat2Raw);
+  const lon2 = Number(lon2Raw);
+
   const R = 6371;
+
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat/2) ** 2 +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLon/2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) *
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
 }
 
 function sortTripByDistance(trip: any[]) {
@@ -93,10 +105,16 @@ export default function TripPlanner() {
 
   const findNearbyBeaches = async (userLat: number, userLon: number) => {
     try {
+      const lat1 = Number(userLat);
+      const lon1 = Number(userLon);
+
       const beachesWithDist = beachesJson.map((b: any) => ({
         ...b,
-        haversineDist: calculateDistance(userLat, userLon, b.lat, b.lon)
+        haversineDist: calculateDistance(lat1, lon1, b.lat, b.lon)
       })).sort((a: any, b: any) => a.haversineDist - b.haversineDist).slice(0, 5);
+      
+      console.log("User:", lat1, lon1);
+      console.log("Nearest beaches:", beachesWithDist);
       
       const routesPromises = beachesWithDist.map(async (beach: any) => {
         try {
@@ -133,6 +151,7 @@ export default function TripPlanner() {
   };
 
   const exportPDF = async () => {
+    window.scrollTo(0, 0);
     const element = document.getElementById("trip-planner-page");
     if (!element) return;
     
@@ -141,14 +160,27 @@ export default function TripPlanner() {
     if (exportBtn) exportBtn.style.display = 'none';
 
     try {
-      const canvas = await html2canvas(element, { scale: 1.5, useCORS: true });
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
       const imgData = canvas.toDataURL("image/png");
 
       const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = 210;
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
       pdf.save("trip-plan.pdf");
     } catch (err) {
       console.error("PDF Export failed", err);
