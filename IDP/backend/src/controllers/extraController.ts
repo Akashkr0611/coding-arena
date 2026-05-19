@@ -34,6 +34,39 @@ export const getWeather = async (req: Request, res: Response) => {
     }
 };
 
+export const getWeatherDetails = async (req: Request, res: Response) => {
+    try {
+        const { lat, lon } = req.query;
+        if (!lat || !lon) {
+            return res.status(400).json({ error: 'lat and lon are required' });
+        }
+        
+        const apiKey = '40c00170642d361d99156dacec66cf9c';
+        
+        const weatherRes = await axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`);
+        const weather = weatherRes.data;
+        
+        const marineRes = await axios.get(`https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&hourly=wave_height`);
+        const marine = marineRes.data;
+        
+        if (weather.cod !== 200) {
+            return res.status(500).json({ error: "Weather fetch failed" });
+        }
+        
+        res.json({
+            windSpeed: weather.wind.speed,
+            humidity: weather.main.humidity,
+            pressure: weather.main.pressure,
+            visibility: weather.visibility,
+            feelsLike: weather.main.feels_like,
+            waveHeight: marine.hourly.wave_height[0] ?? "N/A"
+        });
+    } catch (error) {
+        console.error('Weather Details API Error:', error);
+        res.status(500).json({ error: 'Weather details unavailable' });
+    }
+};
+
 export const getLiveData = async (req: Request, res: Response) => {
     try {
         const liveData = await syncBeachData(Number(req.params.id));

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import apiClient from '../api/client';
 import L from 'leaflet';
-import { X, Cloud, Route as RouteIcon, Droplets, Wind } from 'lucide-react';
+import { X, Cloud, Route as RouteIcon } from 'lucide-react';
 import beachesJson from '../data/beaches.json';
 
 const createDotIcon = (color: string) => {
@@ -27,6 +27,10 @@ export default function Home() {
   const [tripBeaches, setTripBeaches] = useState<number[]>([]);
 
   const [selectedState, setSelectedState] = useState<string>('All');
+  
+  const [showDetails, setShowDetails] = useState(false);
+  const [detailsData, setDetailsData] = useState<any>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   useEffect(() => {
     const trip = JSON.parse(localStorage.getItem('trip') || '[]');
@@ -39,6 +43,9 @@ export default function Home() {
     setSelectedBeach(beach);
     setWeatherData(null);
     setWeatherError(false);
+    setShowDetails(false);
+    setDetailsData(null);
+    setLoadingDetails(false);
     console.log("Clicked beach:", beach);
     console.log("Beach coords:", beach.name, beach.lat, beach.lon);
     console.log("Fetching weather for:", beach.lat, beach.lon);
@@ -52,6 +59,20 @@ export default function Home() {
     } catch (error) {
       console.error('Failed to fetch weather:', error);
       setWeatherError(true);
+    }
+  };
+
+  const handleViewDetails = async () => {
+    if (!selectedBeach) return;
+    setLoadingDetails(true);
+    try {
+      const res = await apiClient.get(`/weather/details?lat=${selectedBeach.lat}&lon=${selectedBeach.lon}`);
+      setDetailsData(res.data);
+      setShowDetails(true);
+    } catch (error) {
+      console.error('Failed to fetch weather details:', error);
+    } finally {
+      setLoadingDetails(false);
     }
   };
 
@@ -152,24 +173,34 @@ export default function Home() {
                   {Math.round(weatherData.temperature)}°C · {weatherData.condition}
                 </div>
               </div>
-              <div className="map-stat-row">
-                <div className="map-stat-label">
-                  <Wind size={16} color="var(--teal)" />
-                  Wind Speed
+
+              {!showDetails && !loadingDetails && (
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={handleViewDetails}
+                  style={{ width: '100%', padding: '6px', marginTop: '4px' }}
+                >
+                  View Details
+                </button>
+              )}
+
+              {loadingDetails && (
+                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--text-muted)', fontSize: '13px', marginTop: '8px' }}>
+                    <div className="loading-spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />
+                    Loading details...
+                 </div>
+              )}
+
+              {showDetails && detailsData && (
+                <div style={{ background: 'rgba(0,0,0,0.02)', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '13px', marginTop: '5px', color: 'var(--text-secondary)' }}>
+                  <p style={{ margin: '4px 0' }}><strong style={{color: 'var(--text-primary)'}}>Wind:</strong> {detailsData.windSpeed} m/s</p>
+                  <p style={{ margin: '4px 0' }}><strong style={{color: 'var(--text-primary)'}}>Humidity:</strong> {detailsData.humidity}%</p>
+                  <p style={{ margin: '4px 0' }}><strong style={{color: 'var(--text-primary)'}}>Pressure:</strong> {detailsData.pressure} hPa</p>
+                  <p style={{ margin: '4px 0' }}><strong style={{color: 'var(--text-primary)'}}>Visibility:</strong> {detailsData.visibility} m</p>
+                  <p style={{ margin: '4px 0' }}><strong style={{color: 'var(--text-primary)'}}>Feels Like:</strong> {detailsData.feelsLike}°C</p>
+                  <p style={{ margin: '4px 0' }}><strong style={{color: 'var(--text-primary)'}}>Wave Height:</strong> {detailsData.waveHeight} m</p>
                 </div>
-                <div className="map-stat-value">
-                  {weatherData.windSpeed} m/s
-                </div>
-              </div>
-              <div className="map-stat-row">
-                <div className="map-stat-label">
-                  <Droplets size={16} color="var(--teal)" />
-                  Humidity
-                </div>
-                <div className="map-stat-value">
-                  {weatherData.humidity}%
-                </div>
-              </div>
+              )}
 
               <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                 <button
