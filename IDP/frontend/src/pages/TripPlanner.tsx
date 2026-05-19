@@ -45,6 +45,14 @@ function sortTripByDistance(trip: any[]) {
   return sorted;
 }
 
+function normalizeState(state: string) {
+  if (!state) return '';
+  return state
+    .toLowerCase()
+    .replace("state", "")
+    .trim();
+}
+
 const parameters = [
   { label: 'Suitability Score', key: 'Suitability Score', max: 100, color: '#14B8A6' },
   { label: 'Temperature (°C)',  key: 'Temperature',       max: 50,  color: '#F59E0B' },
@@ -81,7 +89,8 @@ export default function TripPlanner() {
             const apiKey = "017c2ec54d3a8202be9fefb6e97f3edf";
             const res = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lon}&key=${apiKey}`);
             const data = await res.json();
-            state = data.results[0]?.components?.state;
+            const comp = data.results[0]?.components;
+            state = comp?.state || comp?.region || comp?.state_district;
           } catch (e) {
             console.error("Reverse geocoding failed", e);
           }
@@ -126,10 +135,14 @@ export default function TripPlanner() {
 
       let nearestInState: any = null;
       if (uState) {
-        const sameStateBeaches = otherNearestRaw.filter((b: any) => b.state?.toLowerCase() === uState.toLowerCase());
+        console.log("User state raw:", uState);
+        const normalizedUserState = normalizeState(uState);
+        const sameStateBeaches = otherNearestRaw.filter((b: any) => normalizeState(b.state) === normalizedUserState);
         if (sameStateBeaches.length > 0) {
           nearestInState = sameStateBeaches[0];
           otherNearestRaw = otherNearestRaw.filter((b: any) => b.id !== nearestInState.id);
+        } else {
+          console.warn("No same state match, falling back to nearest");
         }
       }
 
