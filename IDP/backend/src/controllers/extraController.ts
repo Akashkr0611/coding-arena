@@ -112,16 +112,23 @@ export const getRoute = async (req: Request, res: Response) => {
             }
         );
         
-        const route = response.data.routes[0];
-        const distanceKm = route.summary.distance / 1000;
-        const durationMins = route.summary.duration / 60;
+        console.log("Route API response:", response.data);
+
+        if (!response.data.routes || response.data.routes.length === 0) {
+            console.warn("Route API failed, fallback to Haversine");
+            return res.status(500).json({ error: 'Route calculation failed' });
+        }
+
+        const route = response.data.routes[0].summary;
+        const distanceKm = route.distance / 1000;
+        const durationHr = route.duration / 3600;
         
         res.json({
-            distance: distanceKm.toFixed(1),
-            duration: durationMins.toFixed(0)
+            distance: distanceKm,
+            duration: durationHr
         });
     } catch (error) {
-        console.error('Route API Error:', error);
+        console.warn("Route API failed, fallback to Haversine");
         res.status(500).json({ error: 'Route calculation failed' });
     }
 };

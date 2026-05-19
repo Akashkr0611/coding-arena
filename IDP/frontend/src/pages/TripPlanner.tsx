@@ -80,7 +80,6 @@ export default function TripPlanner() {
   const [trip, setTrip] = useState<any[]>([]);
   const [param1, setParam1] = useState('Suitability Score');
   const [param2, setParam2] = useState('Temperature');
-  const [userLocation, setUserLocation] = useState<{lat: number, lon: number} | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [nearbyBeaches, setNearbyBeaches] = useState<any[]>([]);
   const [loadingNearby, setLoadingNearby] = useState(false);
@@ -95,7 +94,6 @@ export default function TripPlanner() {
         async (position) => {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
-          setUserLocation({ lat, lon });
           
           let state = undefined;
           try {
@@ -175,9 +173,17 @@ export default function TripPlanner() {
             user_lat: userLat, user_lon: userLon,
             beach_lat: beach.lat, beach_lon: beach.lon
           });
-          return { ...beach, travelDist: routeRes.data.distance, travelTime: routeRes.data.duration };
+          return { 
+            ...beach, 
+            travelDist: Math.round(routeRes.data.distance), 
+            travelTime: Math.round(routeRes.data.duration) 
+          };
         } catch (err) {
-          return { ...beach, travelDist: beach.haversineDist.toFixed(1), travelTime: 'N/A' };
+          return { 
+            ...beach, 
+            travelDist: Math.round(beach.haversineDist), 
+            travelTime: 'N/A' 
+          };
         }
       });
       
@@ -315,7 +321,7 @@ export default function TripPlanner() {
                   <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 10 }}>{beach.state || beach.location}</div>
                   <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 13 }}>
                     <div><strong>Distance:</strong> {beach.travelDist} km</div>
-                    <div><strong>Time:</strong> {beach.travelTime} {beach.travelTime !== 'N/A' && 'mins'}</div>
+                    <div><strong>Time:</strong> {beach.travelTime} {beach.travelTime !== 'N/A' && 'hr'}</div>
                   </div>
                   <button 
                     className={`btn ${trip.find((t: any) => t.id === beach.id) ? 'btn-ghost' : 'btn-secondary'}`}
@@ -358,8 +364,6 @@ export default function TripPlanner() {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16, padding: 16 }}>
             {trip.map((beach, idx) => {
-              const distance = userLocation ? calculateDistance(userLocation.lat, userLocation.lon, beach.lat, beach.lon) : 0;
-              const { mode, time } = getTravelDetails(distance);
               const suitScore = getParamData(beach, 'Suitability Score');
               const temp = getParamData(beach, 'Temperature');
               
@@ -385,9 +389,9 @@ export default function TripPlanner() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px', fontSize: 13, color: 'var(--text-secondary)' }}>
                     <div><strong>Weather:</strong> {temp}°C</div>
                     <div><strong>Sustainability:</strong> {suitScore}/100</div>
-                    <div><strong>Distance:</strong> {distance ? `${Math.round(distance)} km` : '—'}</div>
-                    <div><strong>Time:</strong> {distance ? `${time} hrs` : '—'}</div>
-                    <div style={{ gridColumn: '1 / -1' }}><strong>Mode:</strong> {distance ? mode : '—'}</div>
+                    <div><strong>Distance:</strong> {beach.travelDist ? `${beach.travelDist} km` : '—'}</div>
+                    <div><strong>Time:</strong> {beach.travelTime ? (beach.travelTime === 'N/A' ? 'N/A' : `${beach.travelTime} hr`) : '—'}</div>
+                    <div style={{ gridColumn: '1 / -1' }}><strong>Mode:</strong> {beach.travelDist ? getTravelDetails(beach.travelDist).mode : '—'}</div>
                   </div>
                 </div>
                 <button
