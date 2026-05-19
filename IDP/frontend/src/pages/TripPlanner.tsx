@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Trash2, Download, Route, BarChart2, Lightbulb, Search } from 'lucide-react';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import html2canvas from 'html2canvas';
 import apiClient from '../api/client';
 import beachesJson from '../data/beaches.json';
 
@@ -47,6 +47,7 @@ export default function TripPlanner() {
   const [trip, setTrip] = useState<any[]>([]);
   const [param1, setParam1] = useState('Suitability Score');
   const [param2, setParam2] = useState('Temperature');
+  const [userLocation, setUserLocation] = useState<{lat: number, lon: number} | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [nearbyBeaches, setNearbyBeaches] = useState<any[]>([]);
   const [loadingNearby, setLoadingNearby] = useState(false);
@@ -61,6 +62,7 @@ export default function TripPlanner() {
         (position) => {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
+          setUserLocation({ lat, lon });
           findNearbyBeaches(lat, lon);
         },
         (error) => {
@@ -130,53 +132,29 @@ export default function TripPlanner() {
     }
   };
 
-  const handleExport = () => {
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const pageWidth = doc.internal.pageSize.getWidth();
+  const exportPDF = async () => {
+    const element = document.getElementById("trip-planner-page");
+    if (!element) return;
+    
+    // Briefly hide export button for cleaner PDF
+    const exportBtn = document.getElementById("export-btn");
+    if (exportBtn) exportBtn.style.display = 'none';
 
-    doc.setFillColor(11, 60, 93);
-    doc.rect(0, 0, pageWidth, 40, 'F');
-    doc.setTextColor(20, 184, 166);
-    doc.setFontSize(22); doc.setFont('helvetica', 'bold');
-    doc.text('CoastWise India', 14, 18);
-    doc.setTextColor(200, 220, 240); doc.setFontSize(11); doc.setFont('helvetica', 'normal');
-    doc.text('Your Personalised Beach Itinerary', 14, 27);
-    const today = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
-    doc.setFontSize(9); doc.text(`Generated: ${today}`, pageWidth - 14, 27, { align: 'right' });
+    try {
+      const canvas = await html2canvas(element, { scale: 1.5, useCORS: true });
+      const imgData = canvas.toDataURL("image/png");
 
-    doc.setTextColor(30, 30, 30); doc.setFontSize(10);
-    doc.text(`Total beaches planned: ${trip.length}`, 14, 50);
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = 210;
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-    const tableBody = trip.map((beach, idx) => [
-      `Day ${idx + 1}`, beach.name, beach.state || beach.location || 'N/A',
-      `${getParamData(beach, 'Temperature')}°C`,
-      `${getParamData(beach, 'Wave Height')} m`,
-      `${getParamData(beach, 'UV Index')}`,
-      beach.id % 2 === 0 ? 'Low' : 'Moderate',
-    ]);
-
-    autoTable(doc, {
-      startY: 56,
-      head: [['Day', 'Beach', 'State', 'Temp', 'Waves', 'UV', 'Crowd']],
-      body: tableBody,
-      headStyles: { fillColor: [11, 60, 93], textColor: [20, 184, 166], fontStyle: 'bold', fontSize: 10 },
-      bodyStyles: { fontSize: 9, textColor: [30, 30, 30] },
-      alternateRowStyles: { fillColor: [240, 249, 255] },
-      styles: { cellPadding: 4, lineColor: [220, 220, 220], lineWidth: 0.2 },
-    });
-
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
-    doc.setFillColor(240, 249, 255);
-    doc.roundedRect(14, finalY, pageWidth - 28, 32, 3, 3, 'F');
-    doc.setTextColor(14, 116, 144); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-    doc.text('Travel Tips', 18, finalY + 9);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(60, 60, 60);
-    doc.text('• Always check local safety flags before entering the water.', 18, finalY + 17);
-    doc.text('• Carry sunscreen (SPF 50+) and stay hydrated at all times.', 18, finalY + 23);
-    doc.text('• Best months to visit Indian beaches: October – March.', 18, finalY + 29);
-    doc.setFontSize(8); doc.setTextColor(150, 163, 175);
-    doc.text('Powered by CoastWise India', pageWidth / 2, 290, { align: 'center' });
-    doc.save('CoastWise_Itinerary.pdf');
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save("trip-plan.pdf");
+    } catch (err) {
+      console.error("PDF Export failed", err);
+    } finally {
+      if (exportBtn) exportBtn.style.display = 'flex';
+    }
   };
 
   const p1cfg = parameters.find(p => p.key === param1) || parameters[0];
@@ -193,8 +171,14 @@ export default function TripPlanner() {
     return <span className={`badge ${cls}`}>{val} {val > 7 ? '· Extreme' : val > 5 ? '· High' : '· Mod'}</span>;
   };
 
+  const getTravelDetails = (distance: number) => {
+    if (distance < 100) return { mode: 'Car 🚗', time: Math.max(1, Math.round(distance / 50)) };
+    if (distance <= 500) return { mode: 'Train 🚆', time: Math.max(1, Math.round(distance / 80)) };
+    return { mode: 'Flight ✈️', time: Math.max(1, Math.round(distance / 600)) };
+  };
+
   return (
-    <div className="page-wrapper">
+    <div id="trip-planner-page" className="page-wrapper" style={{ background: 'var(--bg-default)', padding: 20 }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
         <div>
@@ -202,12 +186,13 @@ export default function TripPlanner() {
           <p className="header-subtitle">Discover nearby beaches and get smart travel routes instantly</p>
         </div>
         <button
+          id="export-btn"
           className="btn btn-primary"
-          onClick={handleExport}
+          onClick={exportPDF}
           disabled={trip.length === 0}
           style={{ gap: 8 }}
         >
-          <Download size={16} /> Export PDF
+          <Download size={16} /> Export Trip Plan
         </button>
       </div>
 
@@ -284,38 +269,49 @@ export default function TripPlanner() {
             </p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12, padding: 16 }}>
-            {trip.map((beach, idx) => (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16, padding: 16 }}>
+            {trip.map((beach, idx) => {
+              const distance = userLocation ? calculateDistance(userLocation.lat, userLocation.lon, beach.lat, beach.lon) : 0;
+              const { mode, time } = getTravelDetails(distance);
+              const suitScore = getParamData(beach, 'Suitability Score');
+              const temp = getParamData(beach, 'Temperature');
+              
+              return (
               <div key={beach.id} style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '14px 16px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+                padding: '16px',
                 border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-sm)',
+                borderRadius: 'var(--radius)',
                 background: 'var(--card-bg)',
                 boxShadow: 'var(--shadow-sm)'
               }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                     <span style={{
                       background: 'var(--teal)', color: '#fff',
                       fontSize: 11, fontWeight: 700,
-                      padding: '2px 8px', borderRadius: 10
+                      padding: '3px 10px', borderRadius: 12
                     }}>Day {idx + 1}</span>
+                    <strong style={{ fontSize: 16, color: 'var(--text-primary)' }}>{beach.name}</strong>
                   </div>
-                  <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 14 }}>{beach.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                    {beach.state || beach.location || 'Unknown'}
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px', fontSize: 13, color: 'var(--text-secondary)' }}>
+                    <div><strong>Weather:</strong> {temp}°C</div>
+                    <div><strong>Sustainability:</strong> {suitScore}/100</div>
+                    <div><strong>Distance:</strong> {distance ? `${Math.round(distance)} km` : '—'}</div>
+                    <div><strong>Time:</strong> {distance ? `${time} hrs` : '—'}</div>
+                    <div style={{ gridColumn: '1 / -1' }}><strong>Mode:</strong> {distance ? mode : '—'}</div>
                   </div>
                 </div>
                 <button
                   onClick={() => removeBeach(beach.id)}
-                  style={{ background: 'rgba(239,68,68,0.08)', border: 'none', borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--danger)', flexShrink: 0 }}
+                  style={{ background: 'rgba(239,68,68,0.08)', border: 'none', borderRadius: 8, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--danger)', flexShrink: 0, marginLeft: 12 }}
                   title="Remove from trip"
                 >
                   <Trash2 size={16} />
                 </button>
               </div>
-            ))}
+            )})}
           </div>
         )}
       </div>
