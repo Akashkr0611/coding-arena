@@ -26,6 +26,8 @@ export default function Home() {
   const [weatherError, setWeatherError] = useState<boolean>(false);
   const [tripBeaches, setTripBeaches] = useState<number[]>([]);
 
+  const [selectedState, setSelectedState] = useState<string>('All');
+
   useEffect(() => {
     const trip = JSON.parse(localStorage.getItem('trip') || '[]');
     setTripBeaches(trip.map((t: any) => t.id));
@@ -37,9 +39,16 @@ export default function Home() {
     setSelectedBeach(beach);
     setWeatherData(null);
     setWeatherError(false);
+    console.log("Clicked beach:", beach);
+    console.log("Beach coords:", beach.name, beach.lat, beach.lon);
+    console.log("Fetching weather for:", beach.lat, beach.lon);
     try {
       const res = await apiClient.get(`/weather?lat=${beach.lat}&lon=${beach.lon}`);
-      setWeatherData(res.data);
+      if (!res.data || res.data.error) {
+        setWeatherError(true);
+      } else {
+        setWeatherData(res.data);
+      }
     } catch (error) {
       console.error('Failed to fetch weather:', error);
       setWeatherError(true);
@@ -75,8 +84,17 @@ export default function Home() {
     );
   }
 
+  const statesList = ['All', ...new Set(beaches.map((b: any) => b.state))];
+  const filteredBeaches = selectedState === 'All' ? beaches : beaches.filter((b: any) => b.state === selectedState);
+
   return (
     <div style={{ height: '100%', width: '100%', position: 'relative' }}>
+      <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 1000, background: 'var(--bg)', padding: '6px 12px', borderRadius: 'var(--radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>Filter State:</span>
+        <select value={selectedState} onChange={(e) => setSelectedState(e.target.value)} style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--border)', outline: 'none', background: 'var(--bg)', color: 'var(--text-primary)', fontSize: '13px' }}>
+          {statesList.map(s => <option key={s as string} value={s as string}>{s as string}</option>)}
+        </select>
+      </div>
       <MapContainer
         center={[20.5937, 78.9629]}
         zoom={5}
@@ -86,7 +104,7 @@ export default function Home() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
-        {beaches.map((beach) => (
+        {filteredBeaches.map((beach) => (
           <Marker
             key={beach.id}
             position={[beach.lat, beach.lon]}

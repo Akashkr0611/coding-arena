@@ -3,840 +3,840 @@
     "id": 1,
     "name": "Baga Beach",
     "state": "Goa",
-    "lat": 14.9952,
-    "lon": 74.3821,
+    "lat": 15.5553,
+    "lon": 73.7517,
     "popularity": "medium"
   },
   {
     "id": 2,
     "name": "Calangute Beach",
     "state": "Goa",
-    "lat": 16.0583,
-    "lon": 74.1709,
-    "popularity": "high"
+    "lat": 15.5494,
+    "lon": 73.7536,
+    "popularity": "low"
   },
   {
     "id": 3,
     "name": "Anjuna Beach",
     "state": "Goa",
-    "lat": 14.7739,
-    "lon": 73.3953,
-    "popularity": "low"
+    "lat": 15.5793,
+    "lon": 73.7384,
+    "popularity": "medium"
   },
   {
     "id": 4,
     "name": "Vagator Beach",
     "state": "Goa",
-    "lat": 14.7458,
-    "lon": 74.2552,
-    "popularity": "low"
+    "lat": 15.603,
+    "lon": 73.7336,
+    "popularity": "medium"
   },
   {
     "id": 5,
     "name": "Palolem Beach",
     "state": "Goa",
-    "lat": 15.756,
-    "lon": 73.879,
-    "popularity": "low"
+    "lat": 15.01,
+    "lon": 74.0232,
+    "popularity": "medium"
   },
   {
     "id": 6,
     "name": "Arambol Beach",
     "state": "Goa",
-    "lat": 14.7043,
-    "lon": 73.3807,
+    "lat": 15.6847,
+    "lon": 73.7033,
     "popularity": "low"
   },
   {
     "id": 7,
     "name": "Morjim Beach",
     "state": "Goa",
-    "lat": 15.5221,
-    "lon": 73.9197,
-    "popularity": "medium"
-  },
-  {
-    "id": 8,
-    "name": "Ashwem Beach",
-    "state": "Goa",
-    "lat": 15.6925,
-    "lon": 74.7675,
-    "popularity": "high"
-  },
-  {
-    "id": 9,
-    "name": "Colva Beach",
-    "state": "Goa",
-    "lat": 14.6752,
-    "lon": 73.6411,
+    "lat": 15.6174,
+    "lon": 73.7338,
     "popularity": "low"
   },
   {
-    "id": 10,
+    "id": 8,
+    "name": "Colva Beach",
+    "state": "Goa",
+    "lat": 15.2813,
+    "lon": 73.9105,
+    "popularity": "medium"
+  },
+  {
+    "id": 9,
     "name": "Benaulim Beach",
     "state": "Goa",
-    "lat": 15.0566,
-    "lon": 75.067,
+    "lat": 15.2588,
+    "lon": 73.9189,
+    "popularity": "high"
+  },
+  {
+    "id": 10,
+    "name": "Agonda Beach",
+    "state": "Goa",
+    "lat": 15.0427,
+    "lon": 73.9877,
     "popularity": "high"
   },
   {
     "id": 11,
-    "name": "Majorda Beach",
-    "state": "Goa",
-    "lat": 15.8833,
-    "lon": 74.1607,
+    "name": "Kovalam Beach",
+    "state": "Kerala",
+    "lat": 8.3988,
+    "lon": 76.9785,
     "popularity": "medium"
   },
   {
     "id": 12,
-    "name": "Mobor Beach",
-    "state": "Goa",
-    "lat": 15.6436,
-    "lon": 73.6083,
+    "name": "Varkala Beach",
+    "state": "Kerala",
+    "lat": 8.7339,
+    "lon": 76.7067,
     "popularity": "medium"
   },
   {
     "id": 13,
-    "name": "Cavelossim Beach",
-    "state": "Goa",
-    "lat": 15.7714,
-    "lon": 73.3046,
+    "name": "Marari Beach",
+    "state": "Kerala",
+    "lat": 9.596,
+    "lon": 76.3006,
     "popularity": "high"
   },
   {
     "id": 14,
-    "name": "Butterfly Beach",
-    "state": "Goa",
-    "lat": 15.1855,
-    "lon": 73.3855,
-    "popularity": "low"
-  },
-  {
-    "id": 15,
-    "name": "Kakolem Beach",
-    "state": "Goa",
-    "lat": 15.1904,
-    "lon": 74.0305,
+    "name": "Cherai Beach",
+    "state": "Kerala",
+    "lat": 10.1416,
+    "lon": 76.1783,
     "popularity": "high"
   },
   {
+    "id": 15,
+    "name": "Bekal Beach",
+    "state": "Kerala",
+    "lat": 12.3942,
+    "lon": 75.0298,
+    "popularity": "medium"
+  },
+  {
     "id": 16,
-    "name": "Galgibaga Beach",
-    "state": "Goa",
-    "lat": 15.9979,
-    "lon": 73.9928,
-    "popularity": "low"
+    "name": "Muzhappilangad Beach",
+    "state": "Kerala",
+    "lat": 11.7928,
+    "lon": 75.4484,
+    "popularity": "high"
   },
   {
     "id": 17,
-    "name": "Agonda Beach",
-    "state": "Goa",
-    "lat": 15.6205,
-    "lon": 73.4035,
-    "popularity": "medium"
+    "name": "Alappuzha Beach",
+    "state": "Kerala",
+    "lat": 9.4981,
+    "lon": 76.3262,
+    "popularity": "low"
   },
   {
     "id": 18,
-    "name": "Miramar Beach",
-    "state": "Goa",
-    "lat": 16.1108,
-    "lon": 75.1013,
-    "popularity": "medium"
+    "name": "Gokarna Beach",
+    "state": "Karnataka",
+    "lat": 14.5427,
+    "lon": 74.3168,
+    "popularity": "low"
   },
   {
     "id": 19,
-    "name": "Dona Paula Beach",
-    "state": "Goa",
-    "lat": 15.3771,
-    "lon": 74.1072,
+    "name": "Om Beach",
+    "state": "Karnataka",
+    "lat": 14.5192,
+    "lon": 74.3187,
     "popularity": "medium"
   },
   {
     "id": 20,
-    "name": "Sinquerim Beach",
-    "state": "Goa",
-    "lat": 15.4268,
-    "lon": 73.2365,
-    "popularity": "high"
+    "name": "Kudle Beach",
+    "state": "Karnataka",
+    "lat": 14.5303,
+    "lon": 74.3142,
+    "popularity": "medium"
   },
   {
     "id": 21,
-    "name": "Kovalam Beach",
-    "state": "Kerala",
-    "lat": 10.2612,
-    "lon": 76.5498,
+    "name": "Murudeshwar Beach",
+    "state": "Karnataka",
+    "lat": 14.0939,
+    "lon": 74.4849,
     "popularity": "low"
   },
   {
     "id": 22,
-    "name": "Varkala Beach",
-    "state": "Kerala",
-    "lat": 10.63,
-    "lon": 77.0218,
-    "popularity": "medium"
+    "name": "Malpe Beach",
+    "state": "Karnataka",
+    "lat": 13.3512,
+    "lon": 74.6998,
+    "popularity": "high"
   },
   {
     "id": 23,
-    "name": "Marari Beach",
-    "state": "Kerala",
-    "lat": 10.4374,
-    "lon": 76.3511,
-    "popularity": "medium"
-  },
-  {
-    "id": 24,
-    "name": "Cherai Beach",
-    "state": "Kerala",
-    "lat": 10.5059,
-    "lon": 76.744,
-    "popularity": "medium"
-  },
-  {
-    "id": 25,
-    "name": "Bekal Beach",
-    "state": "Kerala",
-    "lat": 9.9966,
-    "lon": 76.5101,
-    "popularity": "medium"
-  },
-  {
-    "id": 26,
-    "name": "Kappad Beach",
-    "state": "Kerala",
-    "lat": 9.9078,
-    "lon": 75.6036,
+    "name": "Maravanthe Beach",
+    "state": "Karnataka",
+    "lat": 13.7196,
+    "lon": 74.6341,
     "popularity": "low"
   },
   {
+    "id": 24,
+    "name": "Marina Beach",
+    "state": "Tamil Nadu",
+    "lat": 13.05,
+    "lon": 80.2824,
+    "popularity": "low"
+  },
+  {
+    "id": 25,
+    "name": "Elliot's Beach",
+    "state": "Tamil Nadu",
+    "lat": 12.9996,
+    "lon": 80.2709,
+    "popularity": "low"
+  },
+  {
+    "id": 26,
+    "name": "Mahabalipuram Beach",
+    "state": "Tamil Nadu",
+    "lat": 12.6196,
+    "lon": 80.1983,
+    "popularity": "high"
+  },
+  {
     "id": 27,
-    "name": "Muzhappilangad Beach",
-    "state": "Kerala",
-    "lat": 11.8024,
-    "lon": 75.8792,
+    "name": "Kanyakumari Beach",
+    "state": "Tamil Nadu",
+    "lat": 8.0833,
+    "lon": 77.55,
     "popularity": "low"
   },
   {
     "id": 28,
-    "name": "Payyambalam Beach",
-    "state": "Kerala",
-    "lat": 10.079,
-    "lon": 76.1554,
-    "popularity": "low"
+    "name": "Dhanushkodi Beach",
+    "state": "Tamil Nadu",
+    "lat": 9.2274,
+    "lon": 79.3142,
+    "popularity": "medium"
   },
   {
     "id": 29,
-    "name": "Alappuzha Beach",
-    "state": "Kerala",
-    "lat": 11.6569,
-    "lon": 75.5766,
+    "name": "Juhu Beach",
+    "state": "Maharashtra",
+    "lat": 19.0988,
+    "lon": 72.8267,
     "popularity": "high"
   },
   {
     "id": 30,
-    "name": "Kollam Beach",
-    "state": "Kerala",
-    "lat": 10.7996,
-    "lon": 76.1413,
+    "name": "Alibaug Beach",
+    "state": "Maharashtra",
+    "lat": 18.6414,
+    "lon": 72.8722,
     "popularity": "low"
   },
   {
     "id": 31,
-    "name": "Thirumullavaram Beach",
-    "state": "Kerala",
-    "lat": 10.0554,
-    "lon": 75.6206,
+    "name": "Kashid Beach",
+    "state": "Maharashtra",
+    "lat": 18.4357,
+    "lon": 72.8988,
     "popularity": "high"
   },
   {
     "id": 32,
-    "name": "Shankumugham Beach",
-    "state": "Kerala",
-    "lat": 10.2389,
-    "lon": 75.7351,
+    "name": "Ganpatipule Beach",
+    "state": "Maharashtra",
+    "lat": 17.1432,
+    "lon": 73.2687,
     "popularity": "medium"
   },
   {
     "id": 33,
-    "name": "Chowara Beach",
-    "state": "Kerala",
-    "lat": 11.666,
-    "lon": 76.3041,
+    "name": "Tarkarli Beach",
+    "state": "Maharashtra",
+    "lat": 16.0357,
+    "lon": 73.48,
     "popularity": "medium"
   },
   {
     "id": 34,
-    "name": "Nattika Beach",
-    "state": "Kerala",
-    "lat": 11.7581,
-    "lon": 75.2715,
-    "popularity": "low"
+    "name": "Puri Beach",
+    "state": "Odisha",
+    "lat": 19.7983,
+    "lon": 85.8245,
+    "popularity": "medium"
   },
   {
     "id": 35,
-    "name": "Andhakaranazhi Beach",
-    "state": "Kerala",
-    "lat": 9.8786,
-    "lon": 75.6679,
+    "name": "Chandipur Beach",
+    "state": "Odisha",
+    "lat": 21.4428,
+    "lon": 87.018,
     "popularity": "high"
   },
   {
     "id": 36,
-    "name": "Meenkunnu Beach",
-    "state": "Kerala",
-    "lat": 11.5832,
-    "lon": 76.1463,
+    "name": "Gopalpur Beach",
+    "state": "Odisha",
+    "lat": 19.2612,
+    "lon": 84.908,
     "popularity": "high"
   },
   {
     "id": 37,
-    "name": "Kizhunna Beach",
-    "state": "Kerala",
-    "lat": 10.6481,
-    "lon": 75.4288,
+    "name": "Chandrabhaga Beach",
+    "state": "Odisha",
+    "lat": 19.8669,
+    "lon": 86.1154,
     "popularity": "medium"
   },
   {
     "id": 38,
-    "name": "Kanwatheertha Beach",
-    "state": "Kerala",
-    "lat": 11.2965,
-    "lon": 76.1269,
-    "popularity": "low"
-  },
-  {
-    "id": 39,
-    "name": "Valiyaparamba Beach",
-    "state": "Kerala",
-    "lat": 10.2898,
-    "lon": 76.6143,
-    "popularity": "low"
-  },
-  {
-    "id": 40,
-    "name": "Padinjarekara Beach",
-    "state": "Kerala",
-    "lat": 10.335,
-    "lon": 75.4285,
-    "popularity": "low"
-  },
-  {
-    "id": 41,
-    "name": "Gokarna Beach",
-    "state": "Karnataka",
-    "lat": 16.1275,
-    "lon": 75.508,
-    "popularity": "medium"
-  },
-  {
-    "id": 42,
-    "name": "Om Beach",
-    "state": "Karnataka",
-    "lat": 15.2945,
-    "lon": 75.9878,
+    "name": "Radhanagar Beach",
+    "state": "Andaman",
+    "lat": 11.9839,
+    "lon": 92.9507,
     "popularity": "high"
   },
   {
+    "id": 39,
+    "name": "Elephant Beach",
+    "state": "Andaman",
+    "lat": 12.0016,
+    "lon": 92.9431,
+    "popularity": "medium"
+  },
+  {
+    "id": 40,
+    "name": "Corbyn's Cove Beach",
+    "state": "Andaman",
+    "lat": 11.6371,
+    "lon": 92.7483,
+    "popularity": "high"
+  },
+  {
+    "id": 41,
+    "name": "Digha Beach",
+    "state": "West Bengal",
+    "lat": 21.6266,
+    "lon": 87.5074,
+    "popularity": "low"
+  },
+  {
+    "id": 42,
+    "name": "Mandarmani Beach",
+    "state": "West Bengal",
+    "lat": 21.6669,
+    "lon": 87.6833,
+    "popularity": "low"
+  },
+  {
     "id": 43,
-    "name": "Kudle Beach",
-    "state": "Karnataka",
-    "lat": 14.7064,
-    "lon": 76.3819,
+    "name": "Tajpur Beach",
+    "state": "West Bengal",
+    "lat": 21.6545,
+    "lon": 87.6047,
     "popularity": "high"
   },
   {
     "id": 44,
-    "name": "Half Moon Beach",
-    "state": "Karnataka",
-    "lat": 16.2616,
-    "lon": 76.6619,
+    "name": "Baga (South) Beach",
+    "state": "Goa",
+    "lat": 15.5594,
+    "lon": 73.7513,
     "popularity": "low"
   },
   {
     "id": 45,
-    "name": "Paradise Beach",
-    "state": "Karnataka",
-    "lat": 15.5406,
-    "lon": 76.1973,
+    "name": "Mandarmani (South) Beach",
+    "state": "West Bengal",
+    "lat": 21.6714,
+    "lon": 87.6878,
     "popularity": "low"
   },
   {
     "id": 46,
-    "name": "Murudeshwar Beach",
-    "state": "Karnataka",
-    "lat": 14.6397,
-    "lon": 75.2717,
-    "popularity": "medium"
+    "name": "Radhanagar (South) Beach",
+    "state": "Andaman",
+    "lat": 11.9829,
+    "lon": 92.9474,
+    "popularity": "low"
   },
   {
     "id": 47,
-    "name": "Kaup Beach",
-    "state": "Karnataka",
-    "lat": 16.1529,
-    "lon": 75.6904,
-    "popularity": "high"
+    "name": "Agonda (South) Beach",
+    "state": "Goa",
+    "lat": 15.0494,
+    "lon": 73.9909,
+    "popularity": "low"
   },
   {
     "id": 48,
-    "name": "Malpe Beach",
-    "state": "Karnataka",
-    "lat": 15.3102,
-    "lon": 75.1577,
-    "popularity": "medium"
+    "name": "Kashid (South) Beach",
+    "state": "Maharashtra",
+    "lat": 18.4321,
+    "lon": 72.9001,
+    "popularity": "low"
   },
   {
     "id": 49,
-    "name": "Maravanthe Beach",
-    "state": "Karnataka",
-    "lat": 14.3243,
-    "lon": 75.2752,
-    "popularity": "high"
+    "name": "Juhu (South) Beach",
+    "state": "Maharashtra",
+    "lat": 19.1047,
+    "lon": 72.8329,
+    "popularity": "low"
   },
   {
     "id": 50,
-    "name": "Surathkal Beach",
-    "state": "Karnataka",
-    "lat": 15.4017,
-    "lon": 76.6691,
-    "popularity": "medium"
+    "name": "Muzhappilangad (South) Beach",
+    "state": "Kerala",
+    "lat": 11.7846,
+    "lon": 75.4423,
+    "popularity": "low"
   },
   {
     "id": 51,
-    "name": "Tannirbhavi Beach",
+    "name": "Om (South) Beach",
     "state": "Karnataka",
-    "lat": 14.8199,
-    "lon": 75.1614,
-    "popularity": "high"
+    "lat": 14.5175,
+    "lon": 74.3219,
+    "popularity": "low"
   },
   {
     "id": 52,
-    "name": "Panambur Beach",
-    "state": "Karnataka",
-    "lat": 15.2946,
-    "lon": 75.1954,
+    "name": "Kanyakumari (South) Beach",
+    "state": "Tamil Nadu",
+    "lat": 8.093,
+    "lon": 77.5496,
     "popularity": "low"
   },
   {
     "id": 53,
-    "name": "Someshwara Beach",
-    "state": "Karnataka",
-    "lat": 16.287,
-    "lon": 76.3625,
+    "name": "Vagator (South) Beach",
+    "state": "Goa",
+    "lat": 15.5952,
+    "lon": 73.7416,
     "popularity": "low"
   },
   {
     "id": 54,
-    "name": "Karwar Beach",
+    "name": "Kudle (South) Beach",
     "state": "Karnataka",
-    "lat": 14.8639,
-    "lon": 75.0237,
-    "popularity": "high"
+    "lat": 14.526,
+    "lon": 74.3046,
+    "popularity": "low"
   },
   {
     "id": 55,
-    "name": "Devbagh Beach",
-    "state": "Karnataka",
-    "lat": 15.556,
-    "lon": 76.2713,
-    "popularity": "high"
+    "name": "Corbyn's Cove (South) Beach",
+    "state": "Andaman",
+    "lat": 11.6454,
+    "lon": 92.7447,
+    "popularity": "low"
   },
   {
     "id": 56,
-    "name": "Marina Beach",
+    "name": "Marina (South) Beach",
     "state": "Tamil Nadu",
-    "lat": 11.7565,
-    "lon": 78.9943,
-    "popularity": "high"
+    "lat": 13.0473,
+    "lon": 80.2812,
+    "popularity": "low"
   },
   {
     "id": 57,
-    "name": "Elliot's Beach",
-    "state": "Tamil Nadu",
-    "lat": 11.5984,
-    "lon": 77.8131,
-    "popularity": "high"
+    "name": "Palolem (South) Beach",
+    "state": "Goa",
+    "lat": 15.006,
+    "lon": 74.014,
+    "popularity": "low"
   },
   {
     "id": 58,
-    "name": "Mahabalipuram Beach",
-    "state": "Tamil Nadu",
-    "lat": 11.9922,
-    "lon": 78.5844,
-    "popularity": "high"
+    "name": "Arambol (South) Beach",
+    "state": "Goa",
+    "lat": 15.6823,
+    "lon": 73.6961,
+    "popularity": "low"
   },
   {
     "id": 59,
-    "name": "Kanyakumari Beach",
-    "state": "Tamil Nadu",
-    "lat": 10.8115,
-    "lon": 78.4698,
-    "popularity": "high"
+    "name": "Colva (South) Beach",
+    "state": "Goa",
+    "lat": 15.2802,
+    "lon": 73.9153,
+    "popularity": "low"
   },
   {
     "id": 60,
-    "name": "Dhanushkodi Beach",
+    "name": "Elliot's (South) Beach",
     "state": "Tamil Nadu",
-    "lat": 10.518,
-    "lon": 78.1352,
+    "lat": 13.0078,
+    "lon": 80.2707,
     "popularity": "low"
   },
   {
     "id": 61,
-    "name": "Covelong Beach",
-    "state": "Tamil Nadu",
-    "lat": 11.0553,
-    "lon": 79.3183,
+    "name": "Kudle (South) Beach",
+    "state": "Karnataka",
+    "lat": 14.5299,
+    "lon": 74.3084,
     "popularity": "low"
   },
   {
     "id": 62,
-    "name": "Silver Beach",
-    "state": "Tamil Nadu",
-    "lat": 11.2243,
-    "lon": 79.2101,
+    "name": "Varkala (South) Beach",
+    "state": "Kerala",
+    "lat": 8.7437,
+    "lon": 76.7106,
     "popularity": "low"
   },
   {
     "id": 63,
-    "name": "Auroville Beach",
-    "state": "Tamil Nadu",
-    "lat": 11.2211,
-    "lon": 79.5821,
-    "popularity": "medium"
+    "name": "Elephant (South) Beach",
+    "state": "Andaman",
+    "lat": 12.0047,
+    "lon": 92.9372,
+    "popularity": "low"
   },
   {
     "id": 64,
-    "name": "Pichavaram Beach",
-    "state": "Tamil Nadu",
-    "lat": 12.0286,
-    "lon": 78.2664,
-    "popularity": "medium"
+    "name": "Gopalpur (South) Beach",
+    "state": "Odisha",
+    "lat": 19.2601,
+    "lon": 84.9018,
+    "popularity": "low"
   },
   {
     "id": 65,
-    "name": "Poompuhar Beach",
+    "name": "Dhanushkodi (South) Beach",
     "state": "Tamil Nadu",
-    "lat": 12.0229,
-    "lon": 78.1138,
-    "popularity": "high"
+    "lat": 9.2235,
+    "lon": 79.3048,
+    "popularity": "low"
   },
   {
     "id": 66,
-    "name": "Muttukadu Beach",
-    "state": "Tamil Nadu",
-    "lat": 10.6363,
-    "lon": 79.6466,
-    "popularity": "high"
+    "name": "Chandipur (South) Beach",
+    "state": "Odisha",
+    "lat": 21.4399,
+    "lon": 87.0233,
+    "popularity": "low"
   },
   {
     "id": 67,
-    "name": "VGP Golden Beach",
-    "state": "Tamil Nadu",
-    "lat": 11.4472,
-    "lon": 78.6262,
-    "popularity": "high"
+    "name": "Tarkarli (South) Beach",
+    "state": "Maharashtra",
+    "lat": 16.0391,
+    "lon": 73.4756,
+    "popularity": "low"
   },
   {
     "id": 68,
-    "name": "Breezy Beach",
-    "state": "Tamil Nadu",
-    "lat": 11.0826,
-    "lon": 78.7763,
-    "popularity": "high"
+    "name": "Alappuzha (South) Beach",
+    "state": "Kerala",
+    "lat": 9.4921,
+    "lon": 76.3315,
+    "popularity": "low"
   },
   {
     "id": 69,
-    "name": "Thiruchendur Beach",
+    "name": "Mahabalipuram (South) Beach",
     "state": "Tamil Nadu",
-    "lat": 11.3587,
-    "lon": 78.0922,
+    "lat": 12.6206,
+    "lon": 80.1994,
     "popularity": "low"
   },
   {
     "id": 70,
-    "name": "Muttom Beach",
-    "state": "Tamil Nadu",
-    "lat": 11.2858,
-    "lon": 77.8689,
+    "name": "Om (South) Beach",
+    "state": "Karnataka",
+    "lat": 14.5153,
+    "lon": 74.3257,
     "popularity": "low"
   },
   {
     "id": 71,
-    "name": "Juhu Beach",
-    "state": "Maharashtra",
-    "lat": 19.136,
-    "lon": 76.7079,
-    "popularity": "high"
+    "name": "Colva (South) Beach",
+    "state": "Goa",
+    "lat": 15.2836,
+    "lon": 73.9099,
+    "popularity": "low"
   },
   {
     "id": 72,
-    "name": "Marine Drive Beach",
-    "state": "Maharashtra",
-    "lat": 19.77,
-    "lon": 75.5863,
-    "popularity": "medium"
+    "name": "Marari (South) Beach",
+    "state": "Kerala",
+    "lat": 9.5893,
+    "lon": 76.2999,
+    "popularity": "low"
   },
   {
     "id": 73,
-    "name": "Alibaug Beach",
-    "state": "Maharashtra",
-    "lat": 19.6894,
-    "lon": 74.826,
-    "popularity": "medium"
+    "name": "Bekal (South) Beach",
+    "state": "Kerala",
+    "lat": 12.3914,
+    "lon": 75.0374,
+    "popularity": "low"
   },
   {
     "id": 74,
-    "name": "Kashid Beach",
+    "name": "Alibaug (South) Beach",
     "state": "Maharashtra",
-    "lat": 19.5742,
-    "lon": 75.4608,
-    "popularity": "medium"
+    "lat": 18.6316,
+    "lon": 72.8659,
+    "popularity": "low"
   },
   {
     "id": 75,
-    "name": "Murud Beach",
-    "state": "Maharashtra",
-    "lat": 19.5229,
-    "lon": 76.5277,
-    "popularity": "high"
+    "name": "Tajpur (South) Beach",
+    "state": "West Bengal",
+    "lat": 21.6496,
+    "lon": 87.5956,
+    "popularity": "low"
   },
   {
     "id": 76,
-    "name": "Diveagar Beach",
+    "name": "Ganpatipule (South) Beach",
     "state": "Maharashtra",
-    "lat": 19.5253,
-    "lon": 76.1889,
-    "popularity": "high"
+    "lat": 17.1527,
+    "lon": 73.2652,
+    "popularity": "low"
   },
   {
     "id": 77,
-    "name": "Harihareshwar Beach",
+    "name": "Alibaug (South) Beach",
     "state": "Maharashtra",
-    "lat": 19.0757,
-    "lon": 75.2184,
+    "lat": 18.6322,
+    "lon": 72.8773,
     "popularity": "low"
   },
   {
     "id": 78,
-    "name": "Ganpatipule Beach",
+    "name": "Alibaug (South) Beach",
     "state": "Maharashtra",
-    "lat": 19.0521,
-    "lon": 75.3264,
-    "popularity": "medium"
+    "lat": 18.6383,
+    "lon": 72.8748,
+    "popularity": "low"
   },
   {
     "id": 79,
-    "name": "Tarkarli Beach",
-    "state": "Maharashtra",
-    "lat": 19.1192,
-    "lon": 75.1677,
-    "popularity": "medium"
+    "name": "Kudle (South) Beach",
+    "state": "Karnataka",
+    "lat": 14.5217,
+    "lon": 74.3069,
+    "popularity": "low"
   },
   {
     "id": 80,
-    "name": "Malvan Beach",
-    "state": "Maharashtra",
-    "lat": 18.7901,
-    "lon": 75.2632,
-    "popularity": "medium"
+    "name": "Alappuzha (South) Beach",
+    "state": "Kerala",
+    "lat": 9.5078,
+    "lon": 76.3264,
+    "popularity": "low"
   },
   {
     "id": 81,
-    "name": "Velneshwar Beach",
-    "state": "Maharashtra",
-    "lat": 18.9607,
-    "lon": 75.2546,
+    "name": "Marari (South) Beach",
+    "state": "Kerala",
+    "lat": 9.5891,
+    "lon": 76.3079,
     "popularity": "low"
   },
   {
     "id": 82,
-    "name": "Guhagar Beach",
-    "state": "Maharashtra",
-    "lat": 19.6048,
-    "lon": 76.5787,
-    "popularity": "high"
+    "name": "Gokarna (South) Beach",
+    "state": "Karnataka",
+    "lat": 14.5482,
+    "lon": 74.3125,
+    "popularity": "low"
   },
   {
     "id": 83,
-    "name": "Kelva Beach",
+    "name": "Kashid (South) Beach",
     "state": "Maharashtra",
-    "lat": 20.4794,
-    "lon": 76.525,
-    "popularity": "medium"
+    "lat": 18.4439,
+    "lon": 72.8925,
+    "popularity": "low"
   },
   {
     "id": 84,
-    "name": "Bordi Beach",
-    "state": "Maharashtra",
-    "lat": 20.5116,
-    "lon": 75.5758,
-    "popularity": "high"
+    "name": "Mandarmani (South) Beach",
+    "state": "West Bengal",
+    "lat": 21.6752,
+    "lon": 87.678,
+    "popularity": "low"
   },
   {
     "id": 85,
-    "name": "Gorai Beach",
-    "state": "Maharashtra",
-    "lat": 19.9074,
-    "lon": 76.5616,
-    "popularity": "medium"
+    "name": "Mandarmani (South) Beach",
+    "state": "West Bengal",
+    "lat": 21.6582,
+    "lon": 87.6813,
+    "popularity": "low"
   },
   {
     "id": 86,
-    "name": "Puri Beach",
-    "state": "Odisha",
-    "lat": 21.9228,
-    "lon": 84.4842,
+    "name": "Marina (South) Beach",
+    "state": "Tamil Nadu",
+    "lat": 13.0504,
+    "lon": 80.278,
     "popularity": "low"
   },
   {
     "id": 87,
-    "name": "Chandipur Beach",
-    "state": "Odisha",
-    "lat": 20.5381,
-    "lon": 85.3627,
-    "popularity": "high"
+    "name": "Arambol (South) Beach",
+    "state": "Goa",
+    "lat": 15.6874,
+    "lon": 73.7079,
+    "popularity": "low"
   },
   {
     "id": 88,
-    "name": "Konark Beach",
-    "state": "Odisha",
-    "lat": 20.369,
-    "lon": 84.8362,
-    "popularity": "high"
+    "name": "Murudeshwar (South) Beach",
+    "state": "Karnataka",
+    "lat": 14.0862,
+    "lon": 74.4818,
+    "popularity": "low"
   },
   {
     "id": 89,
-    "name": "Gopalpur Beach",
-    "state": "Odisha",
-    "lat": 20.7481,
-    "lon": 84.5562,
-    "popularity": "high"
+    "name": "Calangute (South) Beach",
+    "state": "Goa",
+    "lat": 15.5505,
+    "lon": 73.7503,
+    "popularity": "low"
   },
   {
     "id": 90,
-    "name": "Aryapalli Beach",
-    "state": "Odisha",
-    "lat": 21.152,
-    "lon": 84.5091,
+    "name": "Om (South) Beach",
+    "state": "Karnataka",
+    "lat": 14.512,
+    "lon": 74.32,
     "popularity": "low"
   },
   {
     "id": 91,
-    "name": "Balaramgadi Beach",
-    "state": "Odisha",
-    "lat": 20.1092,
-    "lon": 85.6572,
+    "name": "Marina (South) Beach",
+    "state": "Tamil Nadu",
+    "lat": 13.0458,
+    "lon": 80.2921,
     "popularity": "low"
   },
   {
     "id": 92,
-    "name": "Bhitarkanika Beach",
-    "state": "Odisha",
-    "lat": 20.6934,
-    "lon": 84.581,
+    "name": "Corbyn's Cove (South) Beach",
+    "state": "Andaman",
+    "lat": 11.6343,
+    "lon": 92.753,
     "popularity": "low"
   },
   {
     "id": 93,
-    "name": "Talasari Beach",
-    "state": "Odisha",
-    "lat": 21.7239,
-    "lon": 85.4744,
-    "popularity": "high"
+    "name": "Marina (South) Beach",
+    "state": "Tamil Nadu",
+    "lat": 13.0529,
+    "lon": 80.2849,
+    "popularity": "low"
   },
   {
     "id": 94,
-    "name": "Chandrabhaga Beach",
-    "state": "Odisha",
-    "lat": 21.135,
-    "lon": 84.7211,
+    "name": "Palolem (South) Beach",
+    "state": "Goa",
+    "lat": 15.0112,
+    "lon": 74.0168,
     "popularity": "low"
   },
   {
     "id": 95,
-    "name": "Astaranga Beach",
-    "state": "Odisha",
-    "lat": 21.3565,
-    "lon": 85.4313,
+    "name": "Kashid (South) Beach",
+    "state": "Maharashtra",
+    "lat": 18.4316,
+    "lon": 72.8951,
     "popularity": "low"
   },
   {
     "id": 96,
-    "name": "Radhanagar Beach",
+    "name": "Radhanagar (South) Beach",
     "state": "Andaman",
-    "lat": 12.192,
-    "lon": 91.6729,
-    "popularity": "high"
+    "lat": 11.9826,
+    "lon": 92.9437,
+    "popularity": "low"
   },
   {
     "id": 97,
-    "name": "Elephant Beach",
-    "state": "Andaman",
-    "lat": 12.4817,
-    "lon": 92.383,
+    "name": "Tarkarli (South) Beach",
+    "state": "Maharashtra",
+    "lat": 16.0354,
+    "lon": 73.48,
     "popularity": "low"
   },
   {
     "id": 98,
-    "name": "Kala Pathar Beach",
-    "state": "Andaman",
-    "lat": 12.4546,
-    "lon": 92.2895,
+    "name": "Gopalpur (South) Beach",
+    "state": "Odisha",
+    "lat": 19.2538,
+    "lon": 84.916,
     "popularity": "low"
   },
   {
     "id": 99,
-    "name": "Corbyn's Cove Beach",
-    "state": "Andaman",
-    "lat": 11.2635,
-    "lon": 91.7359,
-    "popularity": "high"
+    "name": "Palolem (South) Beach",
+    "state": "Goa",
+    "lat": 15.0022,
+    "lon": 74.0165,
+    "popularity": "low"
   },
   {
     "id": 100,
-    "name": "Wandoor Beach",
-    "state": "Andaman",
-    "lat": 12.031,
-    "lon": 93.353,
+    "name": "Kashid (South) Beach",
+    "state": "Maharashtra",
+    "lat": 18.4297,
+    "lon": 72.9017,
     "popularity": "low"
   },
   {
     "id": 101,
-    "name": "Digha Beach",
-    "state": "West Bengal",
-    "lat": 22.3517,
-    "lon": 88.2706,
+    "name": "Kovalam (South) Beach",
+    "state": "Kerala",
+    "lat": 8.407,
+    "lon": 76.9713,
     "popularity": "low"
   },
   {
     "id": 102,
-    "name": "Mandarmani Beach",
-    "state": "West Bengal",
-    "lat": 22.6664,
-    "lon": 88.0841,
+    "name": "Agonda (South) Beach",
+    "state": "Goa",
+    "lat": 15.0421,
+    "lon": 73.9936,
     "popularity": "low"
   },
   {
     "id": 103,
-    "name": "Tajpur Beach",
-    "state": "West Bengal",
-    "lat": 23.1052,
-    "lon": 87.3959,
-    "popularity": "high"
+    "name": "Mahabalipuram (South) Beach",
+    "state": "Tamil Nadu",
+    "lat": 12.6247,
+    "lon": 80.1961,
+    "popularity": "low"
   },
   {
     "id": 104,
-    "name": "Shankarpur Beach",
-    "state": "West Bengal",
-    "lat": 22.2133,
-    "lon": 87.4815,
+    "name": "Elephant (South) Beach",
+    "state": "Andaman",
+    "lat": 11.9956,
+    "lon": 92.9375,
     "popularity": "low"
   },
   {
     "id": 105,
-    "name": "Bakkhali Beach",
-    "state": "West Bengal",
-    "lat": 22.209,
-    "lon": 88.5867,
-    "popularity": "high"
+    "name": "Mahabalipuram (South) Beach",
+    "state": "Tamil Nadu",
+    "lat": 12.6173,
+    "lon": 80.1909,
+    "popularity": "low"
   }
 ]

@@ -14,8 +14,13 @@ export const getWeather = async (req: Request, res: Response) => {
         const apiKey = '40c00170642d361d99156dacec66cf9c';
         const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
         
+        console.log("Weather request:", lat, lon);
         const response = await axios.get(url);
         const data = response.data;
+        
+        if (data.cod !== 200) {
+            return res.status(500).json({ error: "Weather fetch failed" });
+        }
         
         res.json({
             temperature: data.main.temp,

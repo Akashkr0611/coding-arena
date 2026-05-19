@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
 import apiClient from '../api/client';
 import { ShieldAlert, Map, Star, AlertTriangle, TrendingUp } from 'lucide-react';
+import beaches from '../data/beaches.json';
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({ total: 0, alerts: 0 });
+  const [stats, setStats] = useState({ total: beaches.length, alerts: 0 });
 
   useEffect(() => {
-    Promise.all([
-      apiClient.get('/beaches'),
-      apiClient.get('/alerts/1')
-    ]).then(([bRes, aRes]) => {
-      setStats({ total: bRes.data.length, alerts: aRes.data.length });
-    }).catch(console.error);
+    apiClient.get('/alerts/1')
+      .then((aRes) => {
+        setStats({ total: beaches.length, alerts: aRes.data.length });
+      })
+      .catch(console.error);
   }, []);
 
   const getScoreColor = (score: number) => {
