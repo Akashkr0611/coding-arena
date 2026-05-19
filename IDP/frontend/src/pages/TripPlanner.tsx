@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Trash2, Download, Route, BarChart2, Lightbulb, Search } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import apiClient from '../api/client';
 import beachesJson from '../data/beaches.json';
 
 function calculateDistance(lat1Raw: number, lon1Raw: number, lat2Raw: number, lon2Raw: number) {
@@ -119,6 +118,76 @@ export default function TripPlanner() {
     }
   }, []);
 
+  const fetchRoute = async (user: any, beach: any) => {
+    try {
+      console.log("Calling route API for:", beach.name);
+      const res = await fetch("https://api.openrouteservice.org/v2/directions/driving-car", {
+        method: "POST",
+        headers: {
+          "Authorization": "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjUzMGVhYTViZmU0YTQ4MjE5ODg2NDg3NzNkOWUxNzFhIiwiaCI6Im11cm11cjY0In0=",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          coordinates: [
+            [user.lon, user.lat],
+            [beach.lon, beach.lat]
+          ]
+        })
+      });
+      const data = await res.json();
+      console.log("Route response:", data);
+      
+      const route = data.routes?.[0]?.summary;
+      if (!route) {
+        console.error("Route data missing");
+        return { distance: Math.round(calculateDistance(user.lat, user.lon, beach.lat, beach.lon)), time: 'N/A', mode: 'Car 🚗' };
+      }
+      
+      const distanceKm = Math.round(route.distance / 1000);
+      const timeHr = Math.round(route.duration / 3600);
+      return { distance: distanceKm, time: timeHr, mode: getTravelDetails(distanceKm).mode };
+    } catch (e) {
+      console.warn("Route API failed, fallback to Haversine");
+      return { distance: Math.round(calculateDistance(user.lat, user.lon, beach.lat, beach.lon)), time: 'N/A', mode: 'Car 🚗' };
+    }
+  };
+
+  useEffect(() => {
+    const updateRoutesForTrip = async () => {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        const user = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        
+        let changed = false;
+        const newTrip = [...trip];
+
+        for (let i = 0; i < newTrip.length; i++) {
+          const beach = newTrip[i];
+          if (beach.distance === undefined) {
+            const routeData = await fetchRoute(user, beach);
+            const updatedBeach = {
+              ...beach,
+              distance: routeData.distance,
+              time: routeData.time,
+              mode: routeData.mode
+            };
+            newTrip[i] = updatedBeach;
+            changed = true;
+          }
+        }
+        
+        if (changed) {
+          setTrip(newTrip);
+          localStorage.setItem('trip', JSON.stringify(newTrip));
+        }
+      });
+    };
+
+    if (trip.length > 0 && trip.some(b => b.distance === undefined)) {
+      updateRoutesForTrip();
+    }
+  }, [trip]);
+
   const addToTrip = (beach: any) => {
     if (!trip.find((t: any) => t.id === beach.id)) {
       const updated = [...trip, beach];
@@ -168,23 +237,13 @@ export default function TripPlanner() {
       console.log("Nearest beaches:", topBeaches);
       
       const routesPromises = topBeaches.map(async (beach: any) => {
-        try {
-          const routeRes = await apiClient.post('/route', {
-            user_lat: userLat, user_lon: userLon,
-            beach_lat: beach.lat, beach_lon: beach.lon
-          });
-          return { 
-            ...beach, 
-            travelDist: Math.round(routeRes.data.distance), 
-            travelTime: Math.round(routeRes.data.duration) 
-          };
-        } catch (err) {
-          return { 
-            ...beach, 
-            travelDist: Math.round(beach.haversineDist), 
-            travelTime: 'N/A' 
-          };
-        }
+        const routeData = await fetchRoute({ lat: lat1, lon: lon1 }, beach);
+        return { 
+          ...beach, 
+          distance: routeData.distance, 
+          time: routeData.time,
+          mode: routeData.mode
+        };
       });
       
       const finalNearby = await Promise.all(routesPromises);
@@ -320,8 +379,12 @@ export default function TripPlanner() {
                   <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{beach.name}</div>
                   <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 10 }}>{beach.state || beach.location}</div>
                   <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 13 }}>
-                    <div><strong>Distance:</strong> {beach.travelDist} km</div>
-                    <div><strong>Time:</strong> {beach.travelTime} {beach.travelTime !== 'N/A' && 'hr'}</div>
+                    {beach.distance !== undefined && (
+                      <div><strong>Distance:</strong> {beach.distance} km</div>
+                    )}
+                    {beach.time !== undefined && (
+                      <div><strong>Time:</strong> {beach.time} {beach.time !== 'N/A' && 'hr'}</div>
+                    )}
                   </div>
                   <button 
                     className={`btn ${trip.find((t: any) => t.id === beach.id) ? 'btn-ghost' : 'btn-secondary'}`}
@@ -389,9 +452,17 @@ export default function TripPlanner() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px', fontSize: 13, color: 'var(--text-secondary)' }}>
                     <div><strong>Weather:</strong> {temp}°C</div>
                     <div><strong>Sustainability:</strong> {suitScore}/100</div>
-                    <div><strong>Distance:</strong> {beach.travelDist ? `${beach.travelDist} km` : '—'}</div>
-                    <div><strong>Time:</strong> {beach.travelTime ? (beach.travelTime === 'N/A' ? 'N/A' : `${beach.travelTime} hr`) : '—'}</div>
-                    <div style={{ gridColumn: '1 / -1' }}><strong>Mode:</strong> {beach.travelDist ? getTravelDetails(beach.travelDist).mode : '—'}</div>
+                    {beach.distance !== undefined ? (
+                      <div><strong>Distance:</strong> {beach.distance} km</div>
+                    ) : (
+                      <div><strong>Distance:</strong> Loading...</div>
+                    )}
+                    {beach.time !== undefined ? (
+                      <div><strong>Time:</strong> {beach.time} {beach.time !== 'N/A' && 'hr'}</div>
+                    ) : (
+                      <div><strong>Time:</strong> Loading...</div>
+                    )}
+                    <div style={{ gridColumn: '1 / -1' }}><strong>Mode:</strong> {beach.mode ? beach.mode : 'Loading...'}</div>
                   </div>
                 </div>
                 <button
