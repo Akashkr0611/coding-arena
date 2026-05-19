@@ -67,6 +67,65 @@ export const getWeatherDetails = async (req: Request, res: Response) => {
     }
 };
 
+export const geocode = async (req: Request, res: Response) => {
+    try {
+        const { city } = req.query;
+        if (!city) {
+            return res.status(400).json({ error: 'city is required' });
+        }
+        
+        const OPENCAGE_API_KEY = "017c2ec54d3a8202be9fefb6e97f3edf";
+        const url = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(city as string)}&key=${OPENCAGE_API_KEY}`;
+        
+        const response = await axios.get(url);
+        if (response.data.results && response.data.results.length > 0) {
+            const { lat, lng } = response.data.results[0].geometry;
+            res.json({ lat, lon: lng });
+        } else {
+            res.status(404).json({ error: 'City not found' });
+        }
+    } catch (error) {
+        console.error('Geocode API Error:', error);
+        res.status(500).json({ error: 'Geocoding unavailable' });
+    }
+};
+
+export const getRoute = async (req: Request, res: Response) => {
+    try {
+        const { user_lat, user_lon, beach_lat, beach_lon } = req.body;
+        
+        const OPENROUTE_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjUzMGVhYTViZmU0YTQ4MjE5ODg2NDg3NzNkOWUxNzFhIiwiaCI6Im11cm11cjY0In0=";
+        
+        const response = await axios.post(
+            'https://api.openrouteservice.org/v2/directions/driving-car',
+            {
+                coordinates: [
+                    [user_lon, user_lat],
+                    [beach_lon, beach_lat]
+                ]
+            },
+            {
+                headers: {
+                    'Authorization': OPENROUTE_API_KEY,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        
+        const route = response.data.routes[0];
+        const distanceKm = route.summary.distance / 1000;
+        const durationMins = route.summary.duration / 60;
+        
+        res.json({
+            distance: distanceKm.toFixed(1),
+            duration: durationMins.toFixed(0)
+        });
+    } catch (error) {
+        console.error('Route API Error:', error);
+        res.status(500).json({ error: 'Route calculation failed' });
+    }
+};
+
 export const getLiveData = async (req: Request, res: Response) => {
     try {
         const liveData = await syncBeachData(Number(req.params.id));

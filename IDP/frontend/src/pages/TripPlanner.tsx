@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Trash2, Download, Route, BarChart2, Lightbulb } from 'lucide-react';
+import { Trash2, Download, Route, BarChart2, Lightbulb, Search } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import apiClient from '../api/client';
+import beachesJson from '../data/beaches.json';
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371;
@@ -45,16 +47,65 @@ export default function TripPlanner() {
   const [trip, setTrip] = useState<any[]>([]);
   const [param1, setParam1] = useState('Suitability Score');
   const [param2, setParam2] = useState('Temperature');
+  
+  const [userCity, setUserCity] = useState('');
+  const [nearbyBeaches, setNearbyBeaches] = useState<any[]>([]);
+  const [loadingNearby, setLoadingNearby] = useState(false);
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('trip') || '[]');
     setTrip(sortTripByDistance(saved));
   }, []);
 
+  const addToTrip = (beach: any) => {
+    if (!trip.find((t: any) => t.id === beach.id)) {
+      const updated = [...trip, beach];
+      const sorted = sortTripByDistance(updated);
+      setTrip(sorted);
+      localStorage.setItem('trip', JSON.stringify(sorted));
+    }
+  };
+
   const removeBeach = (id: number) => {
     const updated = trip.filter(t => t.id !== id);
     setTrip(updated);
     localStorage.setItem('trip', JSON.stringify(updated));
+  };
+
+  const findNearbyBeaches = async () => {
+    if (!userCity) return;
+    setLoadingNearby(true);
+    setNearbyBeaches([]);
+    try {
+      const geoRes = await apiClient.get(`/geocode?city=${userCity}`);
+      const userLat = geoRes.data.lat;
+      const userLon = geoRes.data.lon;
+      
+      const beachesWithDist = beachesJson.map((b: any) => ({
+        ...b,
+        haversineDist: calculateDistance(userLat, userLon, b.lat, b.lon)
+      })).sort((a: any, b: any) => a.haversineDist - b.haversineDist).slice(0, 5);
+      
+      const routesPromises = beachesWithDist.map(async (beach: any) => {
+        try {
+          const routeRes = await apiClient.post('/route', {
+            user_lat: userLat, user_lon: userLon,
+            beach_lat: beach.lat, beach_lon: beach.lon
+          });
+          return { ...beach, travelDist: routeRes.data.distance, travelTime: routeRes.data.duration };
+        } catch (err) {
+          return { ...beach, travelDist: beach.haversineDist.toFixed(1), travelTime: 'N/A' };
+        }
+      });
+      
+      const finalNearby = await Promise.all(routesPromises);
+      setNearbyBeaches(finalNearby);
+    } catch (error) {
+      console.error('Failed to find beaches:', error);
+      alert('Could not locate the city. Please try a different name.');
+    } finally {
+      setLoadingNearby(false);
+    }
   };
 
   const getParamData = (beach: any, key: string) => {
@@ -138,8 +189,8 @@ export default function TripPlanner() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 className="header-title">Trip Planner</h1>
-          <p className="header-subtitle">Plan &amp; compare your perfect Indian beach itinerary</p>
+          <h1 className="header-title">Intelligent Trip Planner</h1>
+          <p className="header-subtitle">Discover nearby beaches and get smart travel routes instantly</p>
         </div>
         <button
           className="btn btn-primary"
@@ -149,6 +200,61 @@ export default function TripPlanner() {
         >
           <Download size={16} /> Export PDF
         </button>
+      </div>
+
+      {/* ── User Location Search ── */}
+      <div className="card" style={{ marginBottom: 20, padding: 20 }}>
+        <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Search size={18} color="var(--teal)" /> Find Nearest Beaches
+        </h3>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <input 
+            type="text" 
+            className="form-input" 
+            placeholder="Enter your city (e.g., Mumbai, Bangalore)" 
+            value={userCity}
+            onChange={(e) => setUserCity(e.target.value)}
+            style={{ flex: 1, minWidth: 200 }}
+            onKeyDown={(e) => e.key === 'Enter' && findNearbyBeaches()}
+          />
+          <button 
+            className="btn btn-primary" 
+            onClick={findNearbyBeaches}
+            disabled={loadingNearby || !userCity.trim()}
+          >
+            {loadingNearby ? 'Searching...' : 'Find Beaches'}
+          </button>
+        </div>
+        
+        {nearbyBeaches.length > 0 && (
+          <div style={{ marginTop: 20 }}>
+            <h4 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 12 }}>Top 5 Closest Recommendations</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+              {nearbyBeaches.map((beach, idx) => (
+                <div key={beach.id} style={{
+                  padding: 14, border: '1px solid var(--border)', borderRadius: 'var(--radius)', background: 'rgba(0,0,0,0.02)',
+                  position: 'relative'
+                }}>
+                  {idx === 0 && <span style={{ position: 'absolute', top: -10, right: 10, background: 'var(--teal)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>Closest Match</span>}
+                  <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{beach.name}</div>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 10 }}>{beach.state || beach.location}</div>
+                  <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 13 }}>
+                    <div><strong>Distance:</strong> {beach.travelDist} km</div>
+                    <div><strong>Time:</strong> {beach.travelTime} {beach.travelTime !== 'N/A' && 'mins'}</div>
+                  </div>
+                  <button 
+                    className={`btn ${trip.find((t: any) => t.id === beach.id) ? 'btn-ghost' : 'btn-secondary'}`}
+                    style={{ width: '100%', padding: '6px' }}
+                    onClick={() => addToTrip(beach)}
+                    disabled={trip.find((t: any) => t.id === beach.id)}
+                  >
+                    {trip.find((t: any) => t.id === beach.id) ? 'Added' : '+ Add to Trip'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Selected Beaches ── */}

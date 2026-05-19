@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getBeaches, getBeachById, getSuitability, getPrediction, seedBeaches, saveUserPreferences, getRecommendations, getAlerts, getUser } from '../controllers/beachController';
-import { getLiveData, chat, getWeather, getWeatherDetails } from '../controllers/extraController';
+import { getLiveData, chat, getWeather, getWeatherDetails, geocode, getRoute } from '../controllers/extraController';
 
 const router = Router();
 
@@ -9,6 +9,8 @@ router.get('/seed', seedBeaches); // Route to seed database initially
 router.get('/beaches', getBeaches);
 router.get('/weather', getWeather);
 router.get('/weather/details', getWeatherDetails);
+router.get('/geocode', geocode);
+router.post('/route', getRoute);
 router.get('/alerts/:beach_id', getAlerts);
 router.get('/beach/:id', getBeachById);
 router.get('/beach/:id/live-data', getLiveData);
