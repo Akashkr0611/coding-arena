@@ -6,25 +6,38 @@ import apiClient from '../api/client';
 import beachesJson from '../data/beaches.json';
 
 function calculateDistance(lat1Raw: number, lon1Raw: number, lat2Raw: number, lon2Raw: number) {
-  const lat1 = Number(lat1Raw);
-  const lon1 = Number(lon1Raw);
-  const lat2 = Number(lat2Raw);
-  const lon2 = Number(lon2Raw);
+  let lat1 = Number(lat1Raw);
+  let lon1 = Number(lon1Raw);
+  let lat2 = Number(lat2Raw);
+  let lon2 = Number(lon2Raw);
 
-  const R = 6371;
+  if (lat1 > 40 || lon1 < 60) {
+    const temp = lat1;
+    lat1 = lon1;
+    lon1 = temp;
+  }
+  if (lat2 > 40 || lon2 < 60) {
+    const temp = lat2;
+    lat2 = lon2;
+    lon2 = temp;
+  }
 
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const R = 6371; // km
+  const toRad = (deg: number) => deg * Math.PI / 180;
+
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
 
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) *
-    Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.cos(toRad(lat1)) *
+    Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-  return R * c;
+  return Math.round(R * c);
 }
 
 function sortTripByDistance(trip: any[]) {
