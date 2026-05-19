@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
-import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import L from 'leaflet';
-import { X, Cloud, Navigation, ShieldAlert, Route as RouteIcon } from 'lucide-react';
+import { X, Cloud, Route as RouteIcon, Droplets, Wind } from 'lucide-react';
+import beachesJson from '../data/beaches.json';
 
 const createDotIcon = (color: string) => {
   return L.divIcon({
@@ -22,53 +22,34 @@ export default function Home() {
   const [beaches, setBeaches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBeach, setSelectedBeach] = useState<any>(null);
-  const [liveData, setLiveData] = useState<any>(null);
+  const [weatherData, setWeatherData] = useState<any>(null);
+  const [weatherError, setWeatherError] = useState<boolean>(false);
   const [tripBeaches, setTripBeaches] = useState<number[]>([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const trip = JSON.parse(localStorage.getItem('trip') || '[]');
     setTripBeaches(trip.map((t: any) => t.id));
-    apiClient.get('/beaches')
-      .then(res => { setBeaches(res.data); setLoading(false); })
-      .catch(err => { console.error('Failed to fetch beaches:', err); setLoading(false); });
+    setBeaches(beachesJson);
+    setLoading(false);
   }, []);
 
   const handleMarkerClick = async (beach: any) => {
     setSelectedBeach(beach);
-    setLiveData(null);
+    setWeatherData(null);
+    setWeatherError(false);
     try {
-      const res             = await apiClient.get(`/beach/${beach.id}/live-data`);
-      const suitabilityRes  = await apiClient.get(`/beach/${beach.id}/suitability`);
-      setLiveData({ ...res.data, suitability: suitabilityRes.data });
+      const res = await apiClient.get(`/weather?lat=${beach.lat}&lon=${beach.lon}`);
+      setWeatherData(res.data);
     } catch (error) {
-      console.error('Failed to fetch live data:', error);
+      console.error('Failed to fetch weather:', error);
+      setWeatherError(true);
     }
   };
 
   const getMarkerIcon = (beach: any) => {
-    if (beach.id % 3 === 0) return redIcon;
-    if (beach.id % 2 === 0) return yellowIcon;
+    if (beach.popularity === 'high') return redIcon;
+    if (beach.popularity === 'medium') return yellowIcon;
     return greenIcon;
-  };
-
-  const beachStateMap: Record<string, string> = {
-    "Baga Beach": "Goa", "Calangute Beach": "Goa", "Anjuna Beach": "Goa",
-    "Vagator Beach": "Goa", "Colva Beach": "Goa", "Gokarna Beach": "Karnataka",
-    "Om Beach": "Karnataka", "Karwar Beach": "Karnataka", "Kudle Beach": "Karnataka",
-    "Varkala Beach": "Kerala", "Kovalam Beach": "Kerala", "Marari Beach": "Kerala",
-    "Bekal Beach": "Kerala", "Marina Beach": "Tamil Nadu", "Elliot's Beach": "Tamil Nadu",
-    "Mahabalipuram Beach": "Tamil Nadu", "Alibaug Beach": "Maharashtra",
-    "Tarkarli Beach": "Maharashtra", "Ganpatipule Beach": "Maharashtra",
-    "Radhanagar Beach": "Andaman & Nicobar", "Elephant Beach": "Andaman & Nicobar",
-    "Puri Beach": "Odisha", "Chandrabhaga Beach": "Odisha",
-    "Digha Beach": "West Bengal", "Mandarmani Beach": "West Bengal"
-  };
-
-  const getStateForBeach = (beach: any) => {
-    if (beach.state && beach.state !== 'Unknown') return beach.state;
-    if (beach.location && beach.location !== 'Unknown') return beach.location;
-    return beachStateMap[beach.name] || 'Unknown';
   };
 
   const addToTrip = (beach: any) => {
@@ -76,9 +57,9 @@ export default function Home() {
     if (!trip.find((t: any) => t.id === beach.id)) {
       trip.push({
         id: beach.id, name: beach.name,
-        state: getStateForBeach(beach),
-        lat: beach.coordinates?.coordinates[1] || 0,
-        lon: beach.coordinates?.coordinates[0] || 0
+        state: beach.state,
+        lat: beach.lat,
+        lon: beach.lon
       });
       localStorage.setItem('trip', JSON.stringify(trip));
       setTripBeaches(prev => [...prev, beach.id]);
@@ -96,7 +77,6 @@ export default function Home() {
 
   return (
     <div style={{ height: '100%', width: '100%', position: 'relative' }}>
-      {/* Light OSM tile layer */}
       <MapContainer
         center={[20.5937, 78.9629]}
         zoom={5}
@@ -106,20 +86,16 @@ export default function Home() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
-        {beaches.map((beach) => {
-          const coords = beach.coordinates?.coordinates || [73.7516, 15.5523];
-          return (
-            <Marker
-              key={beach.id}
-              position={[coords[1], coords[0]]}
-              icon={getMarkerIcon(beach)}
-              eventHandlers={{ click: () => handleMarkerClick(beach) }}
-            />
-          );
-        })}
+        {beaches.map((beach) => (
+          <Marker
+            key={beach.id}
+            position={[beach.lat, beach.lon]}
+            icon={getMarkerIcon(beach)}
+            eventHandlers={{ click: () => handleMarkerClick(beach) }}
+          />
+        ))}
       </MapContainer>
 
-      {/* Beach info popup */}
       {selectedBeach && (
         <div className="map-popup">
           <button
@@ -136,113 +112,55 @@ export default function Home() {
           </button>
 
           <div className="map-popup-title">{selectedBeach.name}</div>
-          <div className="map-popup-location">{selectedBeach.location}</div>
+          <div className="map-popup-location">{selectedBeach.state}</div>
 
-          {!liveData ? (
+          {!weatherData && !weatherError ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--text-muted)', fontSize: 13 }}>
               <div className="loading-spinner" style={{ width: 20, height: 20, borderWidth: 2 }} />
-              Loading live data...
+              Loading live weather...
+            </div>
+          ) : weatherError ? (
+            <div style={{ padding: '10px 0', color: 'var(--danger)', fontSize: 14 }}>
+              Weather unavailable
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {/* Weather row */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
               <div className="map-stat-row">
                 <div className="map-stat-label">
                   <Cloud size={16} color="var(--teal)" />
-                  Weather
+                  Temp & Condition
                 </div>
-                <div className="map-stat-value">
-                  {Math.round(liveData.weather.temperature)}°C · {Math.round(liveData.weather.wind_speed)} km/h
+                <div className="map-stat-value" style={{ textTransform: 'capitalize' }}>
+                  {Math.round(weatherData.temperature)}°C · {weatherData.condition}
                 </div>
               </div>
-
-              {/* Marine row */}
               <div className="map-stat-row">
                 <div className="map-stat-label">
-                  <Navigation size={16} color="var(--teal)" />
-                  Marine
+                  <Wind size={16} color="var(--teal)" />
+                  Wind Speed
                 </div>
                 <div className="map-stat-value">
-                  Wave {liveData.tide.wave_height.toFixed(1)}m · Tide {(liveData.tide.tide_level ?? 0.5).toFixed(1)}m
+                  {weatherData.windSpeed} m/s
                 </div>
               </div>
-
-              {/* Safety row */}
               <div className="map-stat-row">
                 <div className="map-stat-label">
-                  <ShieldAlert size={16} color={liveData.safety.rip_current_risk === 'High' ? 'var(--danger)' : 'var(--safe)'} />
-                  Safety
+                  <Droplets size={16} color="var(--teal)" />
+                  Humidity
                 </div>
-                <span className={`badge ${liveData.safety.rip_current_risk === 'High' ? 'badge-danger' : liveData.safety.rip_current_risk === 'Moderate' ? 'badge-mod' : 'badge-safe'}`}>
-                  {liveData.safety.rip_current_risk} Risk
-                </span>
-              </div>
-
-              {/* UV + Crowd */}
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {(() => {
-                  const uv = liveData.weather.uv_index || 5;
-                  const uvLabel = uv <= 2 ? 'Low' : uv <= 5 ? 'Moderate' : uv <= 7 ? 'High' : 'Extreme';
-                  const uvClass = uv <= 2 ? 'badge-safe' : uv <= 5 ? 'badge-mod' : 'badge-danger';
-                  return (
-                    <div style={{ flex: 1, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '10px', textAlign: 'center' }}>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>UV Index · {uv}</div>
-                      <span className={`badge ${uvClass}`}>{uvLabel}</span>
-                    </div>
-                  );
-                })()}
-                {(() => {
-                  const crowd = liveData.crowd?.level || (selectedBeach.id % 3 === 0 ? 'High' : selectedBeach.id % 2 === 0 ? 'Moderate' : 'Low');
-                  const crowdClass = crowd === 'Low' ? 'badge-safe' : crowd === 'High' ? 'badge-danger' : 'badge-mod';
-                  return (
-                    <div style={{ flex: 1, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '10px', textAlign: 'center' }}>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Crowd</div>
-                      <span className={`badge ${crowdClass}`}>{crowd === 'Medium' ? 'Moderate' : crowd}</span>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {/* Suitability bar */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: 13 }}>
-                  <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Suitability Score</span>
-                  <strong style={{ color: (liveData.suitability?.overall ?? 50) >= 70 ? 'var(--safe)' : (liveData.suitability?.overall ?? 50) >= 40 ? 'var(--moderate)' : 'var(--danger)' }}>
-                    {Math.round(liveData.suitability?.overall ?? 50)}/100
-                  </strong>
-                </div>
-                <div className="score-bar-track">
-                  <div
-                    className="score-bar-fill"
-                    style={{
-                      width: `${Math.round(liveData.suitability?.overall ?? 50)}%`,
-                      background: (liveData.suitability?.overall ?? 50) >= 70 ? 'var(--safe)' : (liveData.suitability?.overall ?? 50) >= 40 ? 'var(--moderate)' : 'var(--danger)'
-                    }}
-                  />
+                <div className="map-stat-value">
+                  {weatherData.humidity}%
                 </div>
               </div>
 
-              {/* Action buttons */}
-              <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                {(() => {
-                  const isAdded = tripBeaches.includes(selectedBeach.id);
-                  return (
-                    <button
-                      className={`btn ${isAdded ? 'btn-ghost' : 'btn-primary'}`}
-                      style={{ flex: 1 }}
-                      onClick={() => !isAdded && addToTrip(selectedBeach)}
-                      disabled={isAdded}
-                    >
-                      {isAdded ? '✓ In Trip' : <><RouteIcon size={15} /> Add to Trip</>}
-                    </button>
-                  );
-                })()}
+              <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                 <button
-                  className="btn btn-secondary"
+                  className={`btn ${tripBeaches.includes(selectedBeach.id) ? 'btn-ghost' : 'btn-primary'}`}
                   style={{ flex: 1 }}
-                  onClick={() => navigate(`/beach/${selectedBeach.id}`)}
+                  onClick={() => !tripBeaches.includes(selectedBeach.id) && addToTrip(selectedBeach)}
+                  disabled={tripBeaches.includes(selectedBeach.id)}
                 >
-                  Details
+                  {tripBeaches.includes(selectedBeach.id) ? '✓ In Trip' : <><RouteIcon size={15} /> Add to Trip</>}
                 </button>
               </div>
             </div>

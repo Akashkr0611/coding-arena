@@ -2,6 +2,32 @@ import { Request, Response } from 'express';
 import { syncBeachData } from '../services/externalApiService';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Beach } from '../models';
+import axios from 'axios';
+
+export const getWeather = async (req: Request, res: Response) => {
+    try {
+        const { lat, lon } = req.query;
+        if (!lat || !lon) {
+            return res.status(400).json({ error: 'lat and lon are required' });
+        }
+        
+        const apiKey = '40c00170642d361d99156dacec66cf9c';
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+        
+        const response = await axios.get(url);
+        const data = response.data;
+        
+        res.json({
+            temperature: data.main.temp,
+            condition: data.weather[0].description,
+            windSpeed: data.wind.speed,
+            humidity: data.main.humidity
+        });
+    } catch (error) {
+        console.error('Weather API Error:', error);
+        res.status(500).json({ error: 'Weather unavailable' });
+    }
+};
 
 export const getLiveData = async (req: Request, res: Response) => {
     try {
