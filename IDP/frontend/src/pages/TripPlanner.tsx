@@ -400,7 +400,7 @@ export default function TripPlanner() {
                     <button
                       className="btn btn-ghost"
                       style={{ flex: 1, padding: '6px' }}
-                      onClick={() => navigate(`/beach/${beach.id}`)}
+                      onClick={() => navigate(`/beach/${beach.id}`, { state: beach })}
                     >
                       View Details
                     </button>
@@ -480,7 +480,7 @@ export default function TripPlanner() {
                     <button
                       className="btn btn-secondary"
                       style={{ fontSize: 12, padding: '4px 10px', width: 'auto' }}
-                      onClick={() => navigate(`/beach/${beach.id}`)}
+                      onClick={() => navigate(`/beach/${beach.id}`, { state: beach })}
                     >
                       View Details
                     </button>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Cloud, MapPin, Camera, Activity, Building, HeartPulse, Star } from 'lucide-react';
 import apiClient from '../api/client';
 import beachesJson from '../data/beaches.json';
@@ -10,9 +10,11 @@ const FOURSQUARE_API_KEY = "XKOT2SPT5DFO2I3CHSIRXEY5NMO1TKQA5YFGDOD30PEYK0DQ";
 export default function BeachDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const stateBeach = location.state;
   
   const [loading, setLoading] = useState(true);
-  const [beach, setBeach] = useState<any>(null);
+  const [beach, setBeach] = useState<any>(stateBeach || null);
   
   const [images, setImages] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
@@ -22,9 +24,12 @@ export default function BeachDetail() {
   const [weather, setWeather] = useState<any>(null);
 
   useEffect(() => {
-    const b = beachesJson.find((b: any) => b.id === Number(id));
-    if (!b) return;
-    setBeach(b);
+    let b = beach;
+    if (!b) {
+      b = beachesJson.find((b: any) => b.id === Number(id));
+      if (!b) return;
+      setBeach(b);
+    }
 
     const fetchImages = async () => {
       const res = await fetch(
