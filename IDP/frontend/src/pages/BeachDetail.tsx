@@ -11,10 +11,11 @@ export default function BeachDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const stateBeach = location.state;
+  
+  const initialBeach = location.state || beachesJson.find((b: any) => b.id === Number(id));
   
   const [loading, setLoading] = useState(true);
-  const [beach, setBeach] = useState<any>(stateBeach || null);
+  const [beach] = useState<any>(initialBeach);
   
   const [images, setImages] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
@@ -24,16 +25,11 @@ export default function BeachDetail() {
   const [weather, setWeather] = useState<any>(null);
 
   useEffect(() => {
-    let b = beach;
-    if (!b) {
-      b = beachesJson.find((b: any) => b.id === Number(id));
-      if (!b) return;
-      setBeach(b);
-    }
+    if (!beach) return;
 
     const fetchImages = async () => {
       const res = await fetch(
-        `https://api.unsplash.com/search/photos?query=${b.name} ${b.state} beach India&client_id=${UNSPLASH_API_KEY}&orientation=landscape&per_page=5`
+        `https://api.unsplash.com/search/photos?query=${beach.name} ${beach.state} beach India&client_id=${UNSPLASH_API_KEY}&orientation=landscape&per_page=5`
       );
       return res.json();
     };
@@ -43,17 +39,17 @@ export default function BeachDetail() {
       const results = await Promise.all(
         queries.map(q =>
           fetch(
-            `https://api.foursquare.com/v3/places/search?query=${q}&ll=${b.lat},${b.lon}`,
+            `https://api.foursquare.com/v3/places/search?query=${q}&ll=${beach.lat},${beach.lon}`,
             { headers: { Authorization: FOURSQUARE_API_KEY } }
           ).then(res => res.json())
         )
       );
-      return results.flatMap(r => r.results).slice(0, 7);
+      return results.flatMap(r => r.results).filter(Boolean);
     };
 
     const fetchHotels = async () => {
       const res = await fetch(
-        `https://api.foursquare.com/v3/places/search?query=hotel&ll=${b.lat},${b.lon}`,
+        `https://api.foursquare.com/v3/places/search?query=hotel&ll=${beach.lat},${beach.lon}`,
         { headers: { Authorization: FOURSQUARE_API_KEY } }
       );
       return res.json();
@@ -61,7 +57,7 @@ export default function BeachDetail() {
 
     const fetchHospitals = async () => {
       const res = await fetch(
-        `https://api.foursquare.com/v3/places/search?query=hospital&ll=${b.lat},${b.lon}`,
+        `https://api.foursquare.com/v3/places/search?query=hospital&ll=${beach.lat},${beach.lon}`,
         { headers: { Authorization: FOURSQUARE_API_KEY } }
       );
       return res.json();
@@ -69,14 +65,13 @@ export default function BeachDetail() {
 
     const fetchReviews = async () => {
       const res = await fetch(
-        `https://api.foursquare.com/v3/places/search?query=${b.name}&ll=${b.lat},${b.lon}`,
+        `https://api.foursquare.com/v3/places/search?query=beach&ll=${beach.lat},${beach.lon}&sort=RATING`,
         { headers: { Authorization: FOURSQUARE_API_KEY } }
       );
       return res.json();
     };
 
     const loadData = async () => {
-      setLoading(true);
       try {
         const [
           imgs,
@@ -91,7 +86,7 @@ export default function BeachDetail() {
           fetchHotels(),
           fetchHospitals(),
           fetchReviews(),
-          apiClient.get(`/weather?lat=${b.lat}&lon=${b.lon}`).catch(() => ({ data: null }))
+          apiClient.get(`/weather?lat=${beach.lat}&lon=${beach.lon}`).catch(() => ({ data: null }))
         ]);
 
         setImages(imgs.results || []);

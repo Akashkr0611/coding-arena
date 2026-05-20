@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import L from 'leaflet';
+import { X } from 'lucide-react';
 import beachesJson from '../data/beaches.json';
 
 const createDotIcon = (color: string) => {
@@ -21,6 +22,7 @@ export default function Home() {
   const [beaches, setBeaches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedState, setSelectedState] = useState<string>('All');
+  const [selectedBeach, setSelectedBeach] = useState<any>(null);
   
   const navigate = useNavigate();
 
@@ -30,7 +32,28 @@ export default function Home() {
   }, []);
 
   const handleMarkerClick = (beach: any) => {
+    setSelectedBeach(beach);
+  };
+
+  const handleViewDetails = (beach: any) => {
     navigate(`/beach/${beach.id}`, { state: beach });
+  };
+
+  const addToTrip = (beach: any) => {
+    const trip = JSON.parse(localStorage.getItem('trip') || '[]');
+    if (!trip.find((t: any) => t.id === beach.id)) {
+      trip.push({
+        id: beach.id, name: beach.name,
+        state: beach.state,
+        lat: beach.lat,
+        lon: beach.lon
+      });
+      localStorage.setItem('trip', JSON.stringify(trip));
+      // Option: show a toast or alert here
+      alert("Added to Trip!");
+    } else {
+      alert("Already in Trip!");
+    }
   };
 
   const getMarkerIcon = (beach: any) => {
@@ -87,6 +110,46 @@ export default function Home() {
           />
         ))}
       </MapContainer>
+
+      {selectedBeach && (
+        <div className="map-popup" style={{
+          position: 'absolute', bottom: 20, left: 20, zIndex: 1000,
+          background: 'var(--bg)', padding: '16px', borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: '1px solid var(--border)',
+          width: '280px'
+        }}>
+          <button
+            onClick={() => setSelectedBeach(null)}
+            style={{
+              position: 'absolute', top: 10, right: 10,
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'var(--text-muted)'
+            }}
+          >
+            <X size={16} />
+          </button>
+          
+          <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: 'var(--text-primary)' }}>{selectedBeach.name}</h3>
+          <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: 'var(--text-secondary)' }}>{selectedBeach.state}</p>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <button 
+              className="btn btn-secondary"
+              onClick={() => handleViewDetails(selectedBeach)}
+              style={{ width: '100%', padding: '8px' }}
+            >
+              View Details
+            </button>
+            <button 
+              className="btn btn-primary"
+              onClick={() => addToTrip(selectedBeach)}
+              style={{ width: '100%', padding: '8px' }}
+            >
+              Add to Trip
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
