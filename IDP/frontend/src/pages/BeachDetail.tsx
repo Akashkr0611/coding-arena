@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Cloud, MapPin, Camera, Activity, Building, HeartPulse } from 'lucide-react';
-import apiClient from '../api/client';
 import beachesJson from '../data/beaches.json';
 
 const UNSPLASH_API_KEY = "up8OQ9nV2nmmkUI2Fo96O9r2yMDeG5-6y76q4CA6NUw";
@@ -47,12 +46,12 @@ export default function BeachDetail() {
       });
       if (!res.ok) return null;
       const data = await res.json();
-      return data.hours && data.hours.length > 0 ? data.hours[0] : null;
+      return data;
     };
 
     const fetchActivities = async () => {
       const res = await fetch(
-        `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&categories=16000&limit=6`,
+        `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&radius=5000&categories=16000&limit=6`,
         { headers: { Authorization: FOURSQUARE_API_KEY } }
       );
       return res.json();
@@ -60,7 +59,7 @@ export default function BeachDetail() {
 
     const fetchHotels = async () => {
       const res = await fetch(
-        `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&categories=19014&limit=5`,
+        `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&radius=5000&categories=19014&limit=6`,
         { headers: { Authorization: FOURSQUARE_API_KEY } }
       );
       return res.json();
@@ -68,8 +67,15 @@ export default function BeachDetail() {
 
     const fetchHospitals = async () => {
       const res = await fetch(
-        `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&categories=15014&limit=5`,
+        `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&radius=5000&categories=15014&limit=6`,
         { headers: { Authorization: FOURSQUARE_API_KEY } }
+      );
+      return res.json();
+    };
+
+    const fetchWeather = async () => {
+      const res = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=40c00170642d361d99156dacec66cf9c&units=metric`
       );
       return res.json();
     };
@@ -78,7 +84,7 @@ export default function BeachDetail() {
       try {
         const [
           imgs,
-          marine,
+          marineRaw,
           acts,
           htls,
           hsps,
@@ -89,7 +95,7 @@ export default function BeachDetail() {
           fetchActivities(),
           fetchHotels(),
           fetchHospitals(),
-          apiClient.get(`/weather/details?lat=${lat}&lon=${lng}`).catch(() => ({ data: null }))
+          fetchWeather().catch(() => null)
         ]);
 
         setImages(imgs.results || []);
@@ -97,13 +103,30 @@ export default function BeachDetail() {
         setHotels(htls.results || []);
         setHospitals(hsps.results || []);
 
-        const baseWeather = wRes.data || {};
-        if (marine) {
-           baseWeather.waveHeight = marine.waveHeight?.sg;
-           baseWeather.waterTemp = marine.waterTemperature?.sg;
-           baseWeather.currentDirection = marine.currentDirection?.sg;
-           if (!baseWeather.windSpeed && marine.windSpeed?.sg) {
-             baseWeather.windSpeed = marine.windSpeed?.sg;
+        const baseWeather: any = {};
+        
+        if (wRes && wRes.main) {
+          const temp = wRes.main.temp;
+          const feels = wRes.main.feels_like;
+          
+          baseWeather.temperature = temp !== undefined ? Math.round(temp) : "--";
+          baseWeather.feelsLike = feels !== undefined ? Math.round(feels) : undefined;
+          baseWeather.humidity = wRes.main.humidity;
+          baseWeather.pressure = wRes.main.pressure;
+          baseWeather.visibility = wRes.visibility;
+          baseWeather.windSpeed = wRes.wind?.speed ? Math.round(wRes.wind.speed * 3.6) : undefined;
+          if (wRes.weather && wRes.weather[0]) {
+             baseWeather.condition = wRes.weather[0].description;
+          }
+        }
+
+        if (marineRaw && marineRaw.hours && marineRaw.hours.length > 0) {
+           const marine = marineRaw.hours[0];
+           baseWeather.waveHeight = marine.waveHeight?.noaa || 0;
+           baseWeather.waterTemp = marine.waterTemperature?.noaa || 0;
+           baseWeather.currentDirection = marine.currentDirection?.noaa || 0;
+           if (!baseWeather.windSpeed && marine.windSpeed?.noaa) {
+             baseWeather.windSpeed = marine.windSpeed?.noaa;
            }
         }
         setWeather(baseWeather);
@@ -179,10 +202,12 @@ export default function BeachDetail() {
             </h3>
             {weather ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-                <div style={{ fontSize: 42, fontWeight: 800 }}>{Math.round(weather.temperature)}°C</div>
+                <div style={{ fontSize: 42, fontWeight: 800 }}>
+                  {weather.temperature !== "--" ? `${weather.temperature}°C` : "--"}
+                </div>
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 600, textTransform: 'capitalize' }}>{weather.condition}</div>
-                  {weather.feelsLike !== undefined && <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Feels Like: {Math.round(weather.feelsLike)}°C</div>}
+                  {weather.feelsLike !== undefined && <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Feels Like: {weather.feelsLike}°C</div>}
                   {weather.humidity !== undefined && <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Humidity: {weather.humidity}%</div>}
                   <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Wind: {weather.windSpeed} km/h</div>
                   {weather.waveHeight !== undefined && (
@@ -236,7 +261,7 @@ export default function BeachDetail() {
                 ))}
               </ul>
             ) : (
-              <p style={{ color: 'var(--text-muted)' }}>Data not available for this location</p>
+              <p style={{ color: 'var(--text-muted)' }}>Limited data available for this location</p>
             )}
           </div>
 
@@ -257,7 +282,7 @@ export default function BeachDetail() {
                 ))}
               </ul>
             ) : (
-              <p style={{ color: 'var(--text-muted)' }}>Data not available for this location</p>
+              <p style={{ color: 'var(--text-muted)' }}>Limited data available for this location</p>
             )}
           </div>
 
