@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Trash2, Download, Route, BarChart2, Lightbulb, Search } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -76,6 +77,7 @@ const parameters = [
 ];
 
 export default function TripPlanner() {
+  const navigate = useNavigate();
   const [trip, setTrip] = useState<any[]>([]);
   const [param1, setParam1] = useState('Suitability Score');
   const [param2, setParam2] = useState('Temperature');
@@ -386,14 +388,23 @@ export default function TripPlanner() {
                       <div><strong>Time:</strong> {beach.time} {beach.time !== 'N/A' && 'hr'}</div>
                     )}
                   </div>
-                  <button 
-                    className={`btn ${trip.find((t: any) => t.id === beach.id) ? 'btn-ghost' : 'btn-secondary'}`}
-                    style={{ width: '100%', padding: '6px' }}
-                    onClick={() => addToTrip(beach)}
-                    disabled={trip.find((t: any) => t.id === beach.id)}
-                  >
-                    {trip.find((t: any) => t.id === beach.id) ? 'Added' : '+ Add to Trip'}
-                  </button>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button 
+                      className={`btn ${trip.find((t: any) => t.id === beach.id) ? 'btn-ghost' : 'btn-secondary'}`}
+                      style={{ flex: 1, padding: '6px' }}
+                      onClick={() => addToTrip(beach)}
+                      disabled={trip.find((t: any) => t.id === beach.id)}
+                    >
+                      {trip.find((t: any) => t.id === beach.id) ? 'Added' : '+ Add to Trip'}
+                    </button>
+                    <button
+                      className="btn btn-ghost"
+                      style={{ flex: 1, padding: '6px' }}
+                      onClick={() => navigate(`/beach/${beach.id}`)}
+                    >
+                      View Details
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -463,6 +474,16 @@ export default function TripPlanner() {
                       <div><strong>Time:</strong> Loading...</div>
                     )}
                     <div style={{ gridColumn: '1 / -1' }}><strong>Mode:</strong> {beach.mode ? beach.mode : 'Loading...'}</div>
+                  </div>
+                  
+                  <div style={{ marginTop: 12 }}>
+                    <button
+                      className="btn btn-secondary"
+                      style={{ fontSize: 12, padding: '4px 10px', width: 'auto' }}
+                      onClick={() => navigate(`/beach/${beach.id}`)}
+                    >
+                      View Details
+                    </button>
                   </div>
                 </div>
                 <button

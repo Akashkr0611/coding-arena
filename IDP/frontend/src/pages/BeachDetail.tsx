@@ -1,198 +1,277 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Cloud, Navigation, ShieldAlert, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Cloud, MapPin, Camera, Activity, Building, HeartPulse, Star } from 'lucide-react';
 import apiClient from '../api/client';
+import beachesJson from '../data/beaches.json';
+
+const UNSPLASH_API_KEY = "up8OQ9nV2nmmkUI2Fo96O9r2yMDeG5-6y76q4CA6NUw";
+const FOURSQUARE_API_KEY = "XKOT2SPT5DFO2I3CHSIRXEY5NMO1TKQA5YFGDOD30PEYK0DQ";
 
 export default function BeachDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [data, setData] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState('swimming');
+  
+  const [loading, setLoading] = useState(true);
+  const [beach, setBeach] = useState<any>(null);
+  
+  const [images, setImages] = useState<any[]>([]);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [hotels, setHotels] = useState<any[]>([]);
+  const [hospitals, setHospitals] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [weather, setWeather] = useState<any>(null);
 
   useEffect(() => {
-    Promise.all([
-      apiClient.get(`/beach/${id}`),
-      apiClient.get(`/beach/${id}/suitability`),
-      apiClient.get(`/alerts/${id}`)
-    ]).then(([beachRes, scoresRes, alertsRes]) => {
-      const beach = beachRes.data;
-      const parsedId = parseInt(id || '1', 10);
-      const uv = beach.weather?.[0]?.uv_index || (5 + (parsedId % 3));
-      const crowd = parsedId % 3 === 0 ? 'High' : parsedId % 2 === 0 ? 'Moderate' : 'Low';
-      setData({
-        id,
-        name: beach.name || 'Unknown Beach',
-        scores: scoresRes.data,
-        weather: {
-          temperature: beach.weather?.[0]?.temperature || (28 + parsedId % 5),
-          wind: beach.weather?.[0]?.wind_speed || (10 + parsedId % 10),
-          uv
-        },
-        tide: { waveHeight: beach.tides?.[0]?.wave_height || 1.0 },
-        safety: { ripCurrentRisk: beach.safety?.rip_current_risk || 'Moderate' },
-        crowd,
-        alerts: alertsRes.data.map((a: any) => a.message)
-      });
-    }).catch(err => console.error('Error fetching beach details:', err));
+    const b = beachesJson.find((b: any) => b.id === Number(id));
+    if (!b) return;
+    setBeach(b);
+
+    const fetchImages = async () => {
+      const res = await fetch(
+        `https://api.unsplash.com/search/photos?query=${b.name} ${b.state} beach India&client_id=${UNSPLASH_API_KEY}&orientation=landscape&per_page=5`
+      );
+      return res.json();
+    };
+
+    const fetchActivities = async () => {
+      const queries = ["tourist attraction", "water sports", "beach activities"];
+      const results = await Promise.all(
+        queries.map(q =>
+          fetch(
+            `https://api.foursquare.com/v3/places/search?query=${q}&ll=${b.lat},${b.lon}`,
+            { headers: { Authorization: FOURSQUARE_API_KEY } }
+          ).then(res => res.json())
+        )
+      );
+      return results.flatMap(r => r.results).slice(0, 7);
+    };
+
+    const fetchHotels = async () => {
+      const res = await fetch(
+        `https://api.foursquare.com/v3/places/search?query=hotel&ll=${b.lat},${b.lon}`,
+        { headers: { Authorization: FOURSQUARE_API_KEY } }
+      );
+      return res.json();
+    };
+
+    const fetchHospitals = async () => {
+      const res = await fetch(
+        `https://api.foursquare.com/v3/places/search?query=hospital&ll=${b.lat},${b.lon}`,
+        { headers: { Authorization: FOURSQUARE_API_KEY } }
+      );
+      return res.json();
+    };
+
+    const fetchReviews = async () => {
+      const res = await fetch(
+        `https://api.foursquare.com/v3/places/search?query=${b.name}&ll=${b.lat},${b.lon}`,
+        { headers: { Authorization: FOURSQUARE_API_KEY } }
+      );
+      return res.json();
+    };
+
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [
+          imgs,
+          acts,
+          htls,
+          hsps,
+          revs,
+          wRes
+        ] = await Promise.all([
+          fetchImages(),
+          fetchActivities(),
+          fetchHotels(),
+          fetchHospitals(),
+          fetchReviews(),
+          apiClient.get(`/weather?lat=${b.lat}&lon=${b.lon}`).catch(() => ({ data: null }))
+        ]);
+
+        setImages(imgs.results || []);
+        setActivities(acts || []);
+        setHotels(htls.results?.slice(0, 5) || []);
+        setHospitals(hsps.results?.slice(0, 3) || []);
+        setReviews(revs.results?.slice(0, 3) || []);
+        setWeather(wRes.data);
+      } catch (err) {
+        console.error("Error loading beach details:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
   }, [id]);
 
-  if (!data) {
+  if (!beach || loading) {
     return (
-      <div className="loading" style={{ paddingTop: 80 }}>
-        <div className="loading-spinner" />
-        Loading beach details...
+      <div className="loading" style={{ paddingTop: 80, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div className="loading-spinner" style={{ marginBottom: 16 }} />
+        <p style={{ color: 'var(--text-secondary)' }}>Loading live data for this beach...</p>
       </div>
     );
   }
 
-  const score = Math.round(data.scores[activeTab] ?? 60);
-  const scoreColor = score >= 80 ? 'var(--safe)' : score >= 50 ? 'var(--moderate)' : 'var(--danger)';
-  const scoreBg    = score >= 80 ? 'rgba(34,197,94,0.1)' : score >= 50 ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)';
-
-  const getUvBadgeClass = (uv: number) => uv <= 2 ? 'badge-safe' : uv <= 5 ? 'badge-mod' : 'badge-danger';
-  const getUvLabel      = (uv: number) => uv <= 2 ? 'Low' : uv <= 5 ? 'Moderate' : uv <= 7 ? 'High' : 'Extreme';
-  const getCrowdClass   = (c: string) => c === 'Low' ? 'badge-safe' : c === 'Moderate' ? 'badge-mod' : 'badge-danger';
-
-  const tabs = ['swimming', 'surfing', 'relaxing', 'family'];
-
   return (
-    <div className="page-wrapper">
-      {/* Back nav */}
+    <div className="page-wrapper" style={{ padding: 20 }}>
+      {/* Header */}
       <button
         onClick={() => navigate(-1)}
         className="btn btn-ghost"
         style={{ marginBottom: 24, display: 'inline-flex' }}
       >
-        <ArrowLeft size={16} />
-        Back
+        <ArrowLeft size={16} /> Back
       </button>
 
-      <h1 className="header-title" style={{ marginBottom: 24 }}>{data.name}</h1>
-
-      {/* Suitability card */}
-      <div className="card" style={{ textAlign: 'center', marginBottom: 20 }}>
-        <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16, fontWeight: 500 }}>
-          SUITABILITY INDEX
-        </p>
-
-        {/* Circular score */}
-        <div style={{
-          position: 'relative',
-          width: 120, height: 120,
-          margin: '0 auto 20px',
-          borderRadius: '50%',
-          background: scoreBg,
-          border: `6px solid ${scoreColor}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-          <div>
-            <div style={{ fontSize: 38, fontWeight: 800, color: scoreColor, lineHeight: 1 }}>{score}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>/100</div>
-          </div>
-        </div>
-
-        {/* Tab selector */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
-          {tabs.map(tab => (
-            <button
-              key={tab}
-              className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab}
-            </button>
-          ))}
+      <div style={{ marginBottom: 30 }}>
+        <h1 className="header-title" style={{ marginBottom: 8 }}>{beach.name}</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-secondary)', fontSize: 14 }}>
+          <MapPin size={16} color="var(--teal)" />
+          {beach.state || beach.location}
         </div>
       </div>
 
-      {/* Weather + Marine grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 20 }}>
-        {/* Weather card */}
-        <div className="card" style={{ marginBottom: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <div style={{ width: 40, height: 40, background: 'rgba(20,184,166,0.1)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Cloud size={20} color="var(--teal)" />
-            </div>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>WEATHER</span>
+      {/* Images Gallery */}
+      <div style={{ marginBottom: 40 }}>
+        <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 18, marginBottom: 16 }}>
+          <Camera size={20} color="var(--teal)" /> Image Gallery
+        </h3>
+        {images.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+            {images.map((img: any) => (
+              <img 
+                key={img.id} 
+                src={img.urls.regular} 
+                alt={img.alt_description || beach.name} 
+                style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 'var(--radius)' }}
+              />
+            ))}
           </div>
-          <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>
-            {data.weather.temperature}°C
+        ) : (
+          <div style={{ padding: 40, textAlign: 'center', background: 'var(--card-bg)', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+            <p style={{ color: 'var(--text-muted)' }}>No images available for this location.</p>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
-            <span style={{ color: 'var(--text-secondary)' }}>Wind Speed</span>
-            <strong>{Math.round(data.weather.wind)} km/h</strong>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-            <span style={{ color: 'var(--text-secondary)' }}>UV Index</span>
-            <span className={`badge ${getUvBadgeClass(data.weather.uv)}`}>
-              {getUvLabel(data.weather.uv)} ({data.weather.uv})
-            </span>
-          </div>
-        </div>
-
-        {/* Marine & Crowd card */}
-        <div className="card" style={{ marginBottom: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <div style={{ width: 40, height: 40, background: 'rgba(11,60,93,0.08)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Navigation size={20} color="var(--ocean-deep)" />
-            </div>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>MARINE & CROWD</span>
-          </div>
-          <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>
-            {data.tide.waveHeight.toFixed(1)}m
-            <span style={{ fontSize: 16, color: 'var(--text-muted)', fontWeight: 500 }}> wave</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
-            <span style={{ color: 'var(--text-secondary)' }}>Tide Level</span>
-            <strong>~1.5m</strong>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-            <span style={{ color: 'var(--text-secondary)' }}>Crowd Level</span>
-            <span className={`badge ${getCrowdClass(data.crowd)}`}>{data.crowd}</span>
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Safety & Alerts card */}
-      <div className="card">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-          <div style={{ width: 40, height: 40, background: 'rgba(245,158,11,0.1)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <ShieldAlert size={20} color="var(--moderate)" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+        
+        {/* Weather & Report */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div className="card">
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, marginBottom: 16 }}>
+              <Cloud size={18} color="var(--teal)" /> Live Weather
+            </h3>
+            {weather ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+                <div style={{ fontSize: 42, fontWeight: 800 }}>{Math.round(weather.temperature)}°C</div>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 600, textTransform: 'capitalize' }}>{weather.condition}</div>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Wind: {weather.windSpeed} km/h</div>
+                </div>
+              </div>
+            ) : (
+              <p style={{ color: 'var(--text-muted)' }}>Weather data unavailable.</p>
+            )}
           </div>
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-            Safety &amp; Alerts
-          </h3>
+
+          <div className="card">
+            <h3 style={{ fontSize: 16, marginBottom: 12 }}>Beach Report</h3>
+            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              {beach.name} is a beautiful coastal destination in {beach.state || beach.location}. 
+              Known for its scenic views and relaxing atmosphere, it serves as a great getaway.
+              Whether you are looking to enjoy water activities, soak in the sun, or just take a peaceful stroll along the shore, this beach offers a unique local experience.
+            </p>
+          </div>
+
+          <div className="card">
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, marginBottom: 16 }}>
+              <Star size={18} color="#F59E0B" /> Top Reviews
+            </h3>
+            {reviews.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {reviews.map((r: any, idx: number) => (
+                  <div key={idx} style={{ paddingBottom: 12, borderBottom: idx < reviews.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                    <div style={{ fontWeight: 600, marginBottom: 4 }}>{r.name}</div>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+                      {r.location?.formatted_address || r.location?.locality || 'Local Guide'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ color: 'var(--text-muted)' }}>No reviews available.</p>
+            )}
+          </div>
         </div>
 
-        <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '14px 16px',
-          background: 'var(--bg)',
-          borderRadius: 'var(--radius-sm)',
-          border: '1px solid var(--border)',
-          marginBottom: data.alerts.length > 0 ? 14 : 0
-        }}>
-          <span style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Rip Current Risk</span>
-          <span className={`badge ${data.safety.ripCurrentRisk === 'High' ? 'badge-danger' : data.safety.ripCurrentRisk === 'Moderate' ? 'badge-mod' : 'badge-safe'}`}>
-            {data.safety.ripCurrentRisk}
-          </span>
-        </div>
-
-        {data.alerts.length > 0 && data.alerts.map((alert: string, idx: number) => (
-          <div key={idx} style={{
-            background: 'rgba(239,68,68,0.06)',
-            border: '1px solid rgba(239,68,68,0.2)',
-            padding: '14px 16px',
-            borderRadius: 'var(--radius-sm)',
-            color: 'var(--danger)',
-            marginTop: 8,
-            display: 'flex', alignItems: 'flex-start', gap: 10,
-            fontSize: 14
-          }}>
-            <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: 1 }} />
-            {alert}
+        {/* Dynamic Activities, Hotels, Hospitals */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          
+          {/* Things to Do */}
+          <div className="card">
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, marginBottom: 16 }}>
+              <Activity size={18} color="var(--teal)" /> Things to Do
+            </h3>
+            {activities.length > 0 ? (
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {activities.map((act: any, idx: number) => (
+                  <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--teal)' }} />
+                    {act.name}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p style={{ color: 'var(--text-muted)' }}>Popular for scenic views and local experiences.</p>
+            )}
           </div>
-        ))}
+
+          {/* Hotels */}
+          <div className="card">
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, marginBottom: 16 }}>
+              <Building size={18} color="var(--teal)" /> Nearby Hotels
+            </h3>
+            {hotels.length > 0 ? (
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {hotels.map((hotel: any, idx: number) => (
+                  <li key={idx} style={{ fontSize: 14, display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: 500 }}>{hotel.name}</span>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
+                      {hotel.distance ? `${(hotel.distance / 1000).toFixed(1)} km` : ''}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p style={{ color: 'var(--text-muted)' }}>No hotels found nearby.</p>
+            )}
+          </div>
+
+          {/* Hospitals */}
+          <div className="card">
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, marginBottom: 16 }}>
+              <HeartPulse size={18} color="#EF4444" /> Nearby Hospitals
+            </h3>
+            {hospitals.length > 0 ? (
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {hospitals.map((hosp: any, idx: number) => (
+                  <li key={idx} style={{ fontSize: 14, display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: 500 }}>{hosp.name}</span>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
+                      {hosp.distance ? `${(hosp.distance / 1000).toFixed(1)} km` : ''}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p style={{ color: 'var(--text-muted)' }}>No hospitals found nearby.</p>
+            )}
+          </div>
+
+        </div>
       </div>
     </div>
   );
