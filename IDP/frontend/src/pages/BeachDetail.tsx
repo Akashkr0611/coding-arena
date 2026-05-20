@@ -49,29 +49,38 @@ export default function BeachDetail() {
       return data;
     };
 
-    const fetchActivities = async () => {
-      const res = await fetch(
-        `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&radius=5000&categories=16000&limit=6`,
-        { headers: { Authorization: FOURSQUARE_API_KEY } }
-      );
-      return res.json();
+    const roundedLat = Number(lat).toFixed(4);
+    const roundedLng = Number(lng).toFixed(4);
+
+    const fetchFoursquare = async (categories: string, limit: number) => {
+      let radius = 10000;
+      const getUrl = (r: number) => `https://api.foursquare.com/v3/places/search?ll=${roundedLat},${roundedLng}&radius=${r}&limit=${limit}&intent=browse&categories=${categories}`;
+      const options = {
+        headers: { 
+          Authorization: FOURSQUARE_API_KEY,
+          Accept: "application/json"
+        }
+      };
+      
+      let res = await fetch(getUrl(radius), options);
+      let data = await res.json();
+      
+      if (!data.results || data.results.length === 0) {
+        radius = 20000;
+        res = await fetch(getUrl(radius), options);
+        data = await res.json();
+      }
+      
+      console.log(`Foursquare response for ${categories}:`, data);
+      if (!data.results || data.results.length === 0) {
+        console.log("Empty results for coordinates:", roundedLat, roundedLng);
+      }
+      return data;
     };
 
-    const fetchHotels = async () => {
-      const res = await fetch(
-        `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&radius=5000&categories=19014&limit=6`,
-        { headers: { Authorization: FOURSQUARE_API_KEY } }
-      );
-      return res.json();
-    };
-
-    const fetchHospitals = async () => {
-      const res = await fetch(
-        `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&radius=5000&categories=15014&limit=6`,
-        { headers: { Authorization: FOURSQUARE_API_KEY } }
-      );
-      return res.json();
-    };
+    const fetchActivities = () => fetchFoursquare("16000", 6);
+    const fetchHotels = () => fetchFoursquare("19014", 6);
+    const fetchHospitals = () => fetchFoursquare("15014", 6);
 
     const fetchWeather = async () => {
       const res = await fetch(
