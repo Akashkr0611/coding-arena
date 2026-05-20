@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Cloud, MapPin, Camera, Activity, Building, HeartPulse, Star } from 'lucide-react';
+import { ArrowLeft, Cloud, MapPin, Camera, Activity, Building, HeartPulse } from 'lucide-react';
 import apiClient from '../api/client';
 import beachesJson from '../data/beaches.json';
 
 const UNSPLASH_API_KEY = "up8OQ9nV2nmmkUI2Fo96O9r2yMDeG5-6y76q4CA6NUw";
 const FOURSQUARE_API_KEY = "XKOT2SPT5DFO2I3CHSIRXEY5NMO1TKQA5YFGDOD30PEYK0DQ";
+const STORMGLASS_API_KEY = "92c0a3a8-5450-11f1-bdb4-0242ac120004-92c0a45c-5450-11f1-bdb4-0242ac120004";
 
 export default function BeachDetail() {
   const { id } = useParams();
@@ -21,11 +22,13 @@ export default function BeachDetail() {
   const [activities, setActivities] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
   const [hospitals, setHospitals] = useState<any[]>([]);
-  const [reviews, setReviews] = useState<any[]>([]);
   const [weather, setWeather] = useState<any>(null);
 
   useEffect(() => {
     if (!beach) return;
+
+    console.log("Selected beach:", beach);
+    console.log("Lat/Lng:", beach.lat, beach.lon);
 
     const fetchImages = async () => {
       const res = await fetch(
@@ -34,22 +37,27 @@ export default function BeachDetail() {
       return res.json();
     };
 
+    const fetchMarineData = async () => {
+      const params = 'waveHeight,waterTemperature';
+      const res = await fetch(`https://api.stormglass.io/v2/weather/point?lat=${beach.lat}&lng=${beach.lon}&params=${params}`, {
+        headers: { Authorization: STORMGLASS_API_KEY }
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.hours && data.hours.length > 0 ? data.hours[0] : null;
+    };
+
     const fetchActivities = async () => {
-      const queries = ["tourist attraction", "water sports", "beach activities"];
-      const results = await Promise.all(
-        queries.map(q =>
-          fetch(
-            `https://api.foursquare.com/v3/places/search?query=${q}&ll=${beach.lat},${beach.lon}`,
-            { headers: { Authorization: FOURSQUARE_API_KEY } }
-          ).then(res => res.json())
-        )
+      const res = await fetch(
+        `https://api.foursquare.com/v3/places/search?ll=${beach.lat},${beach.lon}&categories=16000&limit=5`,
+        { headers: { Authorization: FOURSQUARE_API_KEY } }
       );
-      return results.flatMap(r => r.results).filter(Boolean);
+      return res.json();
     };
 
     const fetchHotels = async () => {
       const res = await fetch(
-        `https://api.foursquare.com/v3/places/search?query=hotel&ll=${beach.lat},${beach.lon}`,
+        `https://api.foursquare.com/v3/places/search?ll=${beach.lat},${beach.lon}&categories=19014&limit=5`,
         { headers: { Authorization: FOURSQUARE_API_KEY } }
       );
       return res.json();
@@ -57,15 +65,7 @@ export default function BeachDetail() {
 
     const fetchHospitals = async () => {
       const res = await fetch(
-        `https://api.foursquare.com/v3/places/search?query=hospital&ll=${beach.lat},${beach.lon}`,
-        { headers: { Authorization: FOURSQUARE_API_KEY } }
-      );
-      return res.json();
-    };
-
-    const fetchReviews = async () => {
-      const res = await fetch(
-        `https://api.foursquare.com/v3/places/search?query=beach&ll=${beach.lat},${beach.lon}&sort=RATING`,
+        `https://api.foursquare.com/v3/places/search?ll=${beach.lat},${beach.lon}&categories=15014&limit=3`,
         { headers: { Authorization: FOURSQUARE_API_KEY } }
       );
       return res.json();
@@ -75,26 +75,32 @@ export default function BeachDetail() {
       try {
         const [
           imgs,
+          marine,
           acts,
           htls,
           hsps,
-          revs,
           wRes
         ] = await Promise.all([
           fetchImages(),
+          fetchMarineData(),
           fetchActivities(),
           fetchHotels(),
           fetchHospitals(),
-          fetchReviews(),
           apiClient.get(`/weather?lat=${beach.lat}&lon=${beach.lon}`).catch(() => ({ data: null }))
         ]);
 
         setImages(imgs.results || []);
-        setActivities(acts || []);
-        setHotels(htls.results?.slice(0, 5) || []);
-        setHospitals(hsps.results?.slice(0, 3) || []);
-        setReviews(revs.results?.slice(0, 3) || []);
-        setWeather(wRes.data);
+        setActivities(acts.results || []);
+        setHotels(htls.results || []);
+        setHospitals(hsps.results || []);
+
+        const baseWeather = wRes.data || {};
+        if (marine) {
+           baseWeather.waveHeight = marine.waveHeight?.sg;
+           baseWeather.waterTemp = marine.waterTemperature?.sg;
+        }
+        setWeather(baseWeather);
+
       } catch (err) {
         console.error("Error loading beach details:", err);
       } finally {
@@ -170,6 +176,12 @@ export default function BeachDetail() {
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 600, textTransform: 'capitalize' }}>{weather.condition}</div>
                   <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Wind: {weather.windSpeed} km/h</div>
+                  {weather.waveHeight !== undefined && (
+                    <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Waves: {weather.waveHeight} m</div>
+                  )}
+                  {weather.waterTemp !== undefined && (
+                    <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Water Temp: {weather.waterTemp}°C</div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -186,25 +198,6 @@ export default function BeachDetail() {
             </p>
           </div>
 
-          <div className="card">
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, marginBottom: 16 }}>
-              <Star size={18} color="#F59E0B" /> Top Reviews
-            </h3>
-            {reviews.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {reviews.map((r: any, idx: number) => (
-                  <div key={idx} style={{ paddingBottom: 12, borderBottom: idx < reviews.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                    <div style={{ fontWeight: 600, marginBottom: 4 }}>{r.name}</div>
-                    <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
-                      {r.location?.formatted_address || r.location?.locality || 'Local Guide'}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p style={{ color: 'var(--text-muted)' }}>No reviews available.</p>
-            )}
-          </div>
         </div>
 
         {/* Dynamic Activities, Hotels, Hospitals */}
