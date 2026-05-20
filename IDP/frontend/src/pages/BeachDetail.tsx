@@ -25,15 +25,15 @@ export default function BeachDetail() {
   useEffect(() => {
     if (!beach) return;
 
-    const lat = beach.lat || beach.latitude;
-    const lng = beach.lon || beach.lng || beach.longitude;
+    const lat = Number(beach.lat || beach.latitude);
+    const lng = Number(beach.lon || beach.lng || beach.longitude);
 
     console.log("Selected beach:", beach);
-    console.log("Using coords:", lat, lng);
+    console.log("Coordinates used:", lat, lng);
 
     const fetchImages = async () => {
       const res = await fetch(
-        `https://api.unsplash.com/search/photos?query=${beach.name} ${beach.state} beach India&client_id=${UNSPLASH_API_KEY}&orientation=landscape&per_page=5`
+        `https://api.unsplash.com/search/photos?query=${beach.name} ${beach.state} beach India&client_id=${UNSPLASH_API_KEY}&per_page=5`
       );
       return res.json();
     };
@@ -50,7 +50,7 @@ export default function BeachDetail() {
 
     const fetchOverpass = async (query: string) => {
       try {
-        const res = await fetch("https://api.openstreetmap.org/api/interpreter", {
+        const res = await fetch("https://overpass-api.de/api/interpreter", {
           method: "POST",
           body: query
         });
@@ -58,9 +58,7 @@ export default function BeachDetail() {
         const data = await res.json();
         if (!data.elements) return [];
         return data.elements.map((item: any) => ({
-          name: item.tags?.name || "Unknown",
-          lat: item.lat || item.center?.lat,
-          lng: item.lon || item.center?.lon
+          name: item.tags?.name || "Unknown"
         })).filter((item: any) => item.name !== "Unknown").slice(0, 5);
       } catch (err) {
         console.error("Overpass API error:", err);
@@ -69,25 +67,47 @@ export default function BeachDetail() {
     };
 
     const fetchHotels = async () => {
-      const hotelQuery = `
+      let hotelQuery = `
 [out:json];
 (
   node(around:50000, ${lat}, ${lng})["tourism"="hotel"];
   way(around:50000, ${lat}, ${lng})["tourism"="hotel"];
 );
 out center;`;
-      return fetchOverpass(hotelQuery);
+      let res = await fetchOverpass(hotelQuery);
+      if (res.length === 0) {
+         hotelQuery = `
+[out:json];
+(
+  node(around:100000, ${lat}, ${lng})["tourism"="hotel"];
+  way(around:100000, ${lat}, ${lng})["tourism"="hotel"];
+);
+out center;`;
+         res = await fetchOverpass(hotelQuery);
+      }
+      return res;
     };
 
     const fetchHospitals = async () => {
-      const hospitalQuery = `
+      let hospitalQuery = `
 [out:json];
 (
   node(around:50000, ${lat}, ${lng})["amenity"="hospital"];
   way(around:50000, ${lat}, ${lng})["amenity"="hospital"];
 );
 out center;`;
-      return fetchOverpass(hospitalQuery);
+      let res = await fetchOverpass(hospitalQuery);
+      if (res.length === 0) {
+         hospitalQuery = `
+[out:json];
+(
+  node(around:100000, ${lat}, ${lng})["amenity"="hospital"];
+  way(around:100000, ${lat}, ${lng})["amenity"="hospital"];
+);
+out center;`;
+         res = await fetchOverpass(hospitalQuery);
+      }
+      return res;
     };
 
     const fetchWeather = async () => {
@@ -305,9 +325,9 @@ out center;`;
                   </li>
                 ))}
               </ul>
-            ) : (
+            ) : hotels.length === 0 && hospitals.length === 0 ? (
               <p style={{ color: 'var(--text-muted)' }}>Nearby facilities available in closest town</p>
-            )}
+            ) : null}
           </div>
 
           {/* Hospitals */}
@@ -326,9 +346,9 @@ out center;`;
                   </li>
                 ))}
               </ul>
-            ) : (
+            ) : hotels.length === 0 && hospitals.length === 0 ? (
               <p style={{ color: 'var(--text-muted)' }}>Nearby facilities available in closest town</p>
-            )}
+            ) : null}
           </div>
 
         </div>
