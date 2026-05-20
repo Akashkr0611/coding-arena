@@ -4,7 +4,6 @@ import { ArrowLeft, Cloud, MapPin, Camera, Activity, Building, HeartPulse } from
 import beachesJson from '../data/beaches.json';
 
 const UNSPLASH_API_KEY = "up8OQ9nV2nmmkUI2Fo96O9r2yMDeG5-6y76q4CA6NUw";
-const FOURSQUARE_API_KEY = "XKOT2SPT5DFO2I3CHSIRXEY5NMO1TKQA5YFGDOD30PEYK0DQ";
 const STORMGLASS_API_KEY = "92c0a3a8-5450-11f1-bdb4-0242ac120004-92c0a45c-5450-11f1-bdb4-0242ac120004";
 
 export default function BeachDetail() {
@@ -49,38 +48,47 @@ export default function BeachDetail() {
       return data;
     };
 
-    const roundedLat = Number(lat).toFixed(4);
-    const roundedLng = Number(lng).toFixed(4);
-
-    const fetchFoursquare = async (categories: string, limit: number) => {
-      let radius = 10000;
-      const getUrl = (r: number) => `https://api.foursquare.com/v3/places/search?ll=${roundedLat},${roundedLng}&radius=${r}&limit=${limit}&intent=browse&categories=${categories}`;
-      const options = {
-        headers: { 
-          Authorization: FOURSQUARE_API_KEY,
-          Accept: "application/json"
-        }
-      };
-      
-      let res = await fetch(getUrl(radius), options);
-      let data = await res.json();
-      
-      if (!data.results || data.results.length === 0) {
-        radius = 20000;
-        res = await fetch(getUrl(radius), options);
-        data = await res.json();
+    const fetchOverpass = async (query: string) => {
+      try {
+        const res = await fetch("https://api.openstreetmap.org/api/interpreter", {
+          method: "POST",
+          body: query
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        if (!data.elements) return [];
+        return data.elements.map((item: any) => ({
+          name: item.tags?.name || "Unknown",
+          lat: item.lat || item.center?.lat,
+          lng: item.lon || item.center?.lon
+        })).filter((item: any) => item.name !== "Unknown").slice(0, 5);
+      } catch (err) {
+        console.error("Overpass API error:", err);
+        return [];
       }
-      
-      console.log(`Foursquare response for ${categories}:`, data);
-      if (!data.results || data.results.length === 0) {
-        console.log("Empty results for coordinates:", roundedLat, roundedLng);
-      }
-      return data;
     };
 
-    const fetchActivities = () => fetchFoursquare("16000", 6);
-    const fetchHotels = () => fetchFoursquare("19014", 6);
-    const fetchHospitals = () => fetchFoursquare("15014", 6);
+    const fetchHotels = async () => {
+      const hotelQuery = `
+[out:json];
+(
+  node(around:50000, ${lat}, ${lng})["tourism"="hotel"];
+  way(around:50000, ${lat}, ${lng})["tourism"="hotel"];
+);
+out center;`;
+      return fetchOverpass(hotelQuery);
+    };
+
+    const fetchHospitals = async () => {
+      const hospitalQuery = `
+[out:json];
+(
+  node(around:50000, ${lat}, ${lng})["amenity"="hospital"];
+  way(around:50000, ${lat}, ${lng})["amenity"="hospital"];
+);
+out center;`;
+      return fetchOverpass(hospitalQuery);
+    };
 
     const fetchWeather = async () => {
       const res = await fetch(
@@ -94,23 +102,30 @@ export default function BeachDetail() {
         const [
           imgs,
           marineRaw,
-          acts,
           htls,
           hsps,
           wRes
         ] = await Promise.all([
           fetchImages(),
           fetchMarineData(),
-          fetchActivities(),
           fetchHotels(),
           fetchHospitals(),
           fetchWeather().catch(() => null)
         ]);
 
+        const activitiesByState: any = {
+          Goa: ["Water sports like parasailing", "Beach nightlife and parties", "Scuba diving", "Sunset viewing"],
+          Karnataka: ["Boating", "Fishing", "Temple visits", "Sunset photography"],
+          Kerala: ["Backwater rides", "Houseboat experience", "Ayurveda relaxation", "Photography"],
+          Maharashtra: ["Jet skiing", "Fort exploration", "Local seafood tasting", "Beach walks"],
+          "Tamil Nadu": ["Surfing", "Temple visits", "Boat rides", "Sunrise viewing"]
+        };
+        const staticActivities = activitiesByState[beach.state] || ["Relaxing", "Photography", "Walking"];
+
         setImages(imgs.results || []);
-        setActivities(acts.results || []);
-        setHotels(htls.results || []);
-        setHospitals(hsps.results || []);
+        setActivities(staticActivities.map((name: string) => ({ name })));
+        setHotels(htls || []);
+        setHospitals(hsps || []);
 
         const baseWeather: any = {};
         
@@ -270,7 +285,7 @@ export default function BeachDetail() {
                 ))}
               </ul>
             ) : (
-              <p style={{ color: 'var(--text-muted)' }}>Limited data available for this location</p>
+              <p style={{ color: 'var(--text-muted)' }}>Nearby facilities available in closest town</p>
             )}
           </div>
 
@@ -291,7 +306,7 @@ export default function BeachDetail() {
                 ))}
               </ul>
             ) : (
-              <p style={{ color: 'var(--text-muted)' }}>Limited data available for this location</p>
+              <p style={{ color: 'var(--text-muted)' }}>Nearby facilities available in closest town</p>
             )}
           </div>
 
@@ -312,7 +327,7 @@ export default function BeachDetail() {
                 ))}
               </ul>
             ) : (
-              <p style={{ color: 'var(--text-muted)' }}>Data not available for this location</p>
+              <p style={{ color: 'var(--text-muted)' }}>Nearby facilities available in closest town</p>
             )}
           </div>
 
