@@ -114,9 +114,9 @@ export default function Home() {
       {selectedBeach && (
         <div className="map-popup" style={{
           position: 'absolute', bottom: 20, left: 20, zIndex: 1000,
-          background: 'var(--bg)', padding: '16px', borderRadius: '8px',
+          background: 'var(--bg)', padding: '12px', borderRadius: '8px',
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: '1px solid var(--border)',
-          width: '280px'
+          maxWidth: '250px', width: '100%'
         }}>
           <button
             onClick={() => setSelectedBeach(null)}

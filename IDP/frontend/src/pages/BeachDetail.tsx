@@ -27,8 +27,11 @@ export default function BeachDetail() {
   useEffect(() => {
     if (!beach) return;
 
+    const lat = beach.lat || beach.latitude;
+    const lng = beach.lon || beach.lng || beach.longitude;
+
     console.log("Selected beach:", beach);
-    console.log("Lat/Lng:", beach.lat, beach.lon);
+    console.log("Using coords:", lat, lng);
 
     const fetchImages = async () => {
       const res = await fetch(
@@ -38,8 +41,8 @@ export default function BeachDetail() {
     };
 
     const fetchMarineData = async () => {
-      const params = 'waveHeight,waterTemperature';
-      const res = await fetch(`https://api.stormglass.io/v2/weather/point?lat=${beach.lat}&lng=${beach.lon}&params=${params}`, {
+      const params = 'waveHeight,waterTemperature,windSpeed,currentDirection';
+      const res = await fetch(`https://api.stormglass.io/v2/weather/point?lat=${lat}&lng=${lng}&params=${params}`, {
         headers: { Authorization: STORMGLASS_API_KEY }
       });
       if (!res.ok) return null;
@@ -49,7 +52,7 @@ export default function BeachDetail() {
 
     const fetchActivities = async () => {
       const res = await fetch(
-        `https://api.foursquare.com/v3/places/search?ll=${beach.lat},${beach.lon}&categories=16000&limit=5`,
+        `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&categories=16000&limit=6`,
         { headers: { Authorization: FOURSQUARE_API_KEY } }
       );
       return res.json();
@@ -57,7 +60,7 @@ export default function BeachDetail() {
 
     const fetchHotels = async () => {
       const res = await fetch(
-        `https://api.foursquare.com/v3/places/search?ll=${beach.lat},${beach.lon}&categories=19014&limit=5`,
+        `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&categories=19014&limit=5`,
         { headers: { Authorization: FOURSQUARE_API_KEY } }
       );
       return res.json();
@@ -65,7 +68,7 @@ export default function BeachDetail() {
 
     const fetchHospitals = async () => {
       const res = await fetch(
-        `https://api.foursquare.com/v3/places/search?ll=${beach.lat},${beach.lon}&categories=15014&limit=3`,
+        `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&categories=15014&limit=5`,
         { headers: { Authorization: FOURSQUARE_API_KEY } }
       );
       return res.json();
@@ -86,7 +89,7 @@ export default function BeachDetail() {
           fetchActivities(),
           fetchHotels(),
           fetchHospitals(),
-          apiClient.get(`/weather?lat=${beach.lat}&lon=${beach.lon}`).catch(() => ({ data: null }))
+          apiClient.get(`/weather/details?lat=${lat}&lon=${lng}`).catch(() => ({ data: null }))
         ]);
 
         setImages(imgs.results || []);
@@ -98,6 +101,10 @@ export default function BeachDetail() {
         if (marine) {
            baseWeather.waveHeight = marine.waveHeight?.sg;
            baseWeather.waterTemp = marine.waterTemperature?.sg;
+           baseWeather.currentDirection = marine.currentDirection?.sg;
+           if (!baseWeather.windSpeed && marine.windSpeed?.sg) {
+             baseWeather.windSpeed = marine.windSpeed?.sg;
+           }
         }
         setWeather(baseWeather);
 
@@ -175,12 +182,23 @@ export default function BeachDetail() {
                 <div style={{ fontSize: 42, fontWeight: 800 }}>{Math.round(weather.temperature)}°C</div>
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 600, textTransform: 'capitalize' }}>{weather.condition}</div>
+                  {weather.feelsLike !== undefined && <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Feels Like: {Math.round(weather.feelsLike)}°C</div>}
+                  {weather.humidity !== undefined && <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Humidity: {weather.humidity}%</div>}
                   <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Wind: {weather.windSpeed} km/h</div>
                   {weather.waveHeight !== undefined && (
                     <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Waves: {weather.waveHeight} m</div>
                   )}
                   {weather.waterTemp !== undefined && (
                     <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Water Temp: {weather.waterTemp}°C</div>
+                  )}
+                  {weather.currentDirection !== undefined && (
+                    <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Current Dir: {weather.currentDirection}°</div>
+                  )}
+                  {weather.pressure !== undefined && (
+                    <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Pressure: {weather.pressure} hPa</div>
+                  )}
+                  {weather.visibility !== undefined && (
+                    <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Visibility: {weather.visibility / 1000} km</div>
                   )}
                 </div>
               </div>
@@ -218,7 +236,7 @@ export default function BeachDetail() {
                 ))}
               </ul>
             ) : (
-              <p style={{ color: 'var(--text-muted)' }}>Popular for scenic views and local experiences.</p>
+              <p style={{ color: 'var(--text-muted)' }}>Data not available for this location</p>
             )}
           </div>
 
@@ -239,7 +257,7 @@ export default function BeachDetail() {
                 ))}
               </ul>
             ) : (
-              <p style={{ color: 'var(--text-muted)' }}>No hotels found nearby.</p>
+              <p style={{ color: 'var(--text-muted)' }}>Data not available for this location</p>
             )}
           </div>
 
@@ -260,7 +278,7 @@ export default function BeachDetail() {
                 ))}
               </ul>
             ) : (
-              <p style={{ color: 'var(--text-muted)' }}>No hospitals found nearby.</p>
+              <p style={{ color: 'var(--text-muted)' }}>Data not available for this location</p>
             )}
           </div>
 
