@@ -40,8 +40,15 @@ function calculateDistance(lat1Raw: number, lon1Raw: number, lat2Raw: number, lo
   return Math.round(R * c);
 }
 
-function sortTripByDistance(trip: any[]) {
+function sortTripByDistance(trip: any[], userLoc?: {lat: number, lon: number}) {
   if (trip.length <= 1) return trip;
+  if (userLoc) {
+    return [...trip].sort((a, b) => {
+      const distA = calculateDistance(userLoc.lat, userLoc.lon, a.lat, a.lon);
+      const distB = calculateDistance(userLoc.lat, userLoc.lon, b.lat, b.lon);
+      return distA - distB;
+    });
+  }
   const sorted = [trip[0]];
   const remaining = trip.slice(1);
   while (remaining.length > 0) {
@@ -66,6 +73,16 @@ function normalizeState(state: string) {
     .trim();
 }
 
+const getBestTime = (weather: any) => {
+  if (!weather) return "Not available";
+  const temp = weather.temp;
+  const wind = weather.windSpeed || 0;
+  const wave = weather.waveHeight || 0;
+  if (temp > 34) return "Early Morning (6–9 AM) or Evening (5–7 PM)";
+  if (wave > 2 || wind > 12) return "Not recommended today";
+  return "Anytime (Safe conditions)";
+};
+
 const parameters = [
   { label: 'Suitability Score', key: 'Suitability Score', max: 100, color: '#14B8A6' },
   { label: 'Temperature (°C)',  key: 'Temperature',       max: 50,  color: '#F59E0B' },
@@ -84,6 +101,7 @@ export default function TripPlanner() {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [nearbyBeaches, setNearbyBeaches] = useState<any[]>([]);
   const [loadingNearby, setLoadingNearby] = useState(false);
+  const [userLocation, setUserLocation] = useState<{lat: number, lon: number} | null>(null);
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('trip') || '[]');
@@ -95,6 +113,9 @@ export default function TripPlanner() {
         async (position) => {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
+          const userLoc = { lat, lon };
+          setUserLocation(userLoc);
+          setTrip(sortTripByDistance(saved, userLoc));
           
           let state = undefined;
           try {
@@ -193,7 +214,7 @@ export default function TripPlanner() {
   const addToTrip = (beach: any) => {
     if (!trip.find((t: any) => t.id === beach.id)) {
       const updated = [...trip, beach];
-      const sorted = sortTripByDistance(updated);
+      const sorted = sortTripByDistance(updated, userLocation || undefined);
       setTrip(sorted);
       localStorage.setItem('trip', JSON.stringify(sorted));
     }
@@ -531,7 +552,11 @@ export default function TripPlanner() {
                           • Travel time: {beach.time !== undefined && beach.time !== 'N/A' ? `${beach.time} hr` : 'N/A'}
                         </div>
                         <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                          • Best time: {getParamData(beach, 'Temperature') > 32 ? '5 PM - 7 PM' : 'Anytime'}
+                          • Best time: {getBestTime({ 
+                              temp: beach.temp || getParamData(beach, 'Temperature'), 
+                              windSpeed: beach.windSpeed || getParamData(beach, 'Wind Speed'), 
+                              waveHeight: beach.waveHeight || getParamData(beach, 'Wave Height') 
+                            })}
                         </div>
                         <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
                           • Crowd: {crowd}
