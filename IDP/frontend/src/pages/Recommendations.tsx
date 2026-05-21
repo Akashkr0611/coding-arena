@@ -8,22 +8,33 @@ export default function Recommendations() {
   const [recommended, setRecommended] = useState<any[]>([]);
   const [localBeaches, setBeaches] = useState<any[]>(beaches);
   const [recommendedBeach, setRecommendedBeach] = useState<any>(null);
-  const [preference] = useState("relaxation");
+  const [preference] = useState("Peaceful");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   console.log("Fetched recommendations:", recommended);
 
-  let recommendedForUser = localBeaches.filter(b => {
-    if (preference === "relaxation") return b.crowd === "low" && b.waveHeight < 1.5;
-    if (preference === "adventure") return b.waveHeight >= 1;
-    if (preference === "nature") return b.sustainabilityScore >= 70;
-    return true;
-  }).sort((a, b) => b.sustainabilityScore - a.sustainabilityScore).slice(0, 5);
+  const filterByPreference = (beachesArr: any[], pref: string) => {
+    if (pref === "Peaceful") {
+      return beachesArr.filter(b => b.crowd === "low" && b.waveHeight < 1.5);
+    }
+    if (pref === "Adventure") {
+      return beachesArr.filter(b => b.waveHeight >= 1.5);
+    }
+    if (pref === "Scenic") {
+      return beachesArr.filter(b => b.sustainabilityScore >= 75);
+    }
+    if (pref === "Family") {
+      return beachesArr.filter(b => b.waveHeight < 1 && b.crowd !== "high");
+    }
+    return beachesArr;
+  };
+
+  let recommendedForUser = filterByPreference(localBeaches, preference).slice(0, 5);
 
   if (recommendedForUser.length === 0) {
-    recommendedForUser = localBeaches
-      .sort((a, b) => b.sustainabilityScore - a.sustainabilityScore)
+    recommendedForUser = [...localBeaches]
+      .sort((a, b) => b.waveHeight - a.waveHeight)
       .slice(0, 5);
   }
 

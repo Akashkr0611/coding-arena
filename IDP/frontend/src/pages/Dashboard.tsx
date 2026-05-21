@@ -121,15 +121,34 @@ export default function Dashboard() {
     },
   ];
 
-  const topBeaches = localBeaches
-    .filter(b => b.sustainabilityScore)
-    .sort((a, b) => b.sustainabilityScore - a.sustainabilityScore)
-    .slice(0, 5)
-    .map(b => ({
+  const getDiverseTopBeaches = () => {
+    const sorted = [...localBeaches]
+      .filter(b => b.sustainabilityScore)
+      .sort((a, b) => b.sustainabilityScore - a.sustainabilityScore);
+
+    const stateCount: Record<string, number> = {};
+    const diverseBeaches = [];
+
+    for (let beach of sorted) {
+      const state = beach.state;
+      if (!stateCount[state]) stateCount[state] = 0;
+
+      if (stateCount[state] < 2) {
+        diverseBeaches.push(beach);
+        stateCount[state]++;
+      }
+
+      if (diverseBeaches.length === 5) break;
+    }
+
+    return diverseBeaches.map(b => ({
       name: b.name,
       location: b.state,
       score: b.sustainabilityScore
     }));
+  };
+
+  const topBeaches = getDiverseTopBeaches();
 
   return (
     <div className="page-wrapper">
