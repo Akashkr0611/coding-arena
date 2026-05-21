@@ -75,14 +75,6 @@ const getTravelTime = (distanceKm: number) => {
   return `${time.toFixed(1)} hr`;
 };
 
-function normalizeState(state: string) {
-  if (!state) return '';
-  return state
-    .toLowerCase()
-    .replace("state", "")
-    .trim();
-}
-
 const parameters = [
   { label: 'Suitability Score', key: 'Suitability Score', max: 100, color: '#14B8A6' },
   { label: 'Temperature (°C)',  key: 'Temperature',       max: 50,  color: '#F59E0B' },
@@ -117,18 +109,7 @@ export default function TripPlanner() {
           setUserLocation(userLoc);
           setTrip(sortTripByDistance(saved, userLoc));
           
-          let state = undefined;
-          try {
-            const apiKey = "017c2ec54d3a8202be9fefb6e97f3edf";
-            const res = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lon}&key=${apiKey}`);
-            const data = await res.json();
-            const comp = data.results[0]?.components;
-            state = comp?.state || comp?.region || comp?.state_district;
-          } catch (e) {
-            console.error("Reverse geocoding failed", e);
-          }
-
-          findNearbyBeaches(lat, lon, state);
+          findNearbyBeaches(lat, lon);
         },
         (error) => {
           console.error("Location error:", error);
@@ -228,54 +209,44 @@ export default function TripPlanner() {
     localStorage.setItem('trip', JSON.stringify(updated));
   };
 
-const getBaseName = (name: string) => name.split("(")[0].trim();
+const getBaseName = (name: string) => {
+  let base = name.split("(")[0].toLowerCase().trim();
+  base = base.replace(/\s+beach$/, "");
+  base = base.replace(/\s+north$/, "");
+  base = base.replace(/\s+south$/, "");
+  return base.trim();
+};
 
-  const findNearbyBeaches = async (userLat: number, userLon: number, uState?: string) => {
+  const findNearbyBeaches = async (userLat: number, userLon: number) => {
     try {
       const lat1 = Number(userLat);
       const lon1 = Number(userLon);
 
-      let sorted = beachesJson.map((b: any) => ({
+      let otherNearestRaw = beachesJson.map((b: any) => ({
         ...b,
-        haversineDist: calculateDistance(lat1, lon1, b.lat, b.lon)
-      })).sort((a: any, b: any) => a.haversineDist - b.haversineDist);
+        distanceFromUser: calculateDistance(lat1, lon1, b.lat, b.lon)
+      })).sort((a: any, b: any) => a.distanceFromUser - b.distanceFromUser);
 
       const uniqueSorted = [];
       const seen = new Set();
-      for (let b of sorted) {
+      
+      for (let b of otherNearestRaw) {
         const base = getBaseName(b.name);
         if (!seen.has(base)) {
           uniqueSorted.push(b);
           seen.add(base);
         }
+        if (uniqueSorted.length === 5) break;
       }
-
-      let otherNearestRaw = uniqueSorted;
-
-      let nearestInState: any = null;
-      if (uState) {
-        console.log("User state raw:", uState);
-        const normalizedUserState = normalizeState(uState);
-        const sameStateBeaches = otherNearestRaw.filter((b: any) => normalizeState(b.state) === normalizedUserState);
-        if (sameStateBeaches.length > 0) {
-          nearestInState = sameStateBeaches[0];
-          otherNearestRaw = otherNearestRaw.filter((b: any) => b.id !== nearestInState.id);
-        } else {
-          console.warn("No same state match, falling back to nearest");
-        }
-      }
-
-      const topBeaches = [];
-      if (nearestInState) {
-        nearestInState.isBestLocal = true;
-        topBeaches.push(nearestInState);
-      }
-      topBeaches.push(...otherNearestRaw.slice(0, 5 - topBeaches.length));
       
-      console.log("User:", lat1, lon1);
-      console.log("Nearest beaches:", topBeaches);
+      const closestBeaches = uniqueSorted;
       
-      const routesPromises = topBeaches.map(async (beach: any) => {
+      console.log("Top 5 closest debug:", closestBeaches.map(b => ({
+        name: b.name,
+        base: getBaseName(b.name)
+      })));
+
+      const routesPromises = closestBeaches.map(async (beach: any) => {
         const routeData = await fetchRoute({ lat: lat1, lon: lon1 }, beach);
         return { 
           ...beach, 
