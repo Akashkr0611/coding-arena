@@ -228,15 +228,29 @@ export default function TripPlanner() {
     localStorage.setItem('trip', JSON.stringify(updated));
   };
 
+const getBaseName = (name: string) => name.split("(")[0].trim();
+
   const findNearbyBeaches = async (userLat: number, userLon: number, uState?: string) => {
     try {
       const lat1 = Number(userLat);
       const lon1 = Number(userLon);
 
-      let otherNearestRaw = beachesJson.map((b: any) => ({
+      let sorted = beachesJson.map((b: any) => ({
         ...b,
         haversineDist: calculateDistance(lat1, lon1, b.lat, b.lon)
       })).sort((a: any, b: any) => a.haversineDist - b.haversineDist);
+
+      const uniqueSorted = [];
+      const seen = new Set();
+      for (let b of sorted) {
+        const base = getBaseName(b.name);
+        if (!seen.has(base)) {
+          uniqueSorted.push(b);
+          seen.add(base);
+        }
+      }
+
+      let otherNearestRaw = uniqueSorted;
 
       let nearestInState: any = null;
       if (uState) {
@@ -419,7 +433,7 @@ export default function TripPlanner() {
                       <div><strong>Distance:</strong> {beach.distance} km</div>
                     )}
                     {beach.time !== undefined && (
-                      <div><strong>Time:</strong> {beach.time} {beach.time !== 'N/A' && 'hr'}</div>
+                      <div><strong>Time:</strong> {beach.time}</div>
                     )}
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
@@ -502,11 +516,7 @@ export default function TripPlanner() {
                     ) : (
                       <div><strong>Distance:</strong> Loading...</div>
                     )}
-                    {beach.time !== undefined ? (
-                      <div><strong>Time:</strong> {beach.time} {beach.time !== 'N/A' && 'hr'}</div>
-                    ) : (
-                      <div><strong>Time:</strong> Loading...</div>
-                    )}
+
                     <div style={{ gridColumn: '1 / -1' }}><strong>Mode:</strong> {beach.mode ? beach.mode : 'Loading...'}</div>
                   </div>
                   
@@ -551,9 +561,6 @@ export default function TripPlanner() {
                       <div key={beach.id} style={{ borderLeft: '2px solid var(--teal)', paddingLeft: 12 }}>
                         <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>Day {idx + 1} → {beach.name}</div>
                         <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
-                          • Travel time: {beach.time || 'N/A'}
-                        </div>
-                        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
                           • Best time: {beach.bestTime || "Evening (4–7 PM)"}
                         </div>
                         <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
