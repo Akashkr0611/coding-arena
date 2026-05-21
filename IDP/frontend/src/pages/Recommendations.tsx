@@ -8,38 +8,48 @@ export default function Recommendations() {
   const [recommended, setRecommended] = useState<any[]>([]);
   const [localBeaches, setBeaches] = useState<any[]>(beaches);
   const [recommendedBeach, setRecommendedBeach] = useState<any>(null);
-  const [preference, setPreference] = useState("Peaceful");
+  const [preferences, setPreferences] = useState({
+    safe: true,
+    scenic: true,
+    quiet: false,
+    adventure: false
+  });
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  console.log("Fetched recommendations:", recommended);
-  console.log("Selected preference:", preference);
-
-  const preferences = ["Peaceful", "Adventure", "Scenic", "Family"];
-
-  const filterByPreference = (beachesArr: any[], pref: string) => {
-    if (pref === "Peaceful") {
-      return beachesArr.filter(b => b.crowd === "low" && b.waveHeight < 1.5);
-    }
-    if (pref === "Adventure") {
-      return beachesArr.filter(b => b.waveHeight >= 1.5);
-    }
-    if (pref === "Scenic") {
-      return beachesArr.filter(b => b.sustainabilityScore >= 75);
-    }
-    if (pref === "Family") {
-      return beachesArr.filter(b => b.waveHeight < 1 && b.crowd !== "high");
-    }
-    return beachesArr;
+  const togglePreference = (key: keyof typeof preferences) => {
+    setPreferences(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
   };
 
-  let recommendedForUser = filterByPreference(localBeaches, preference).slice(0, 5);
+  console.log("Fetched recommendations:", recommended);
+  console.log("Preferences:", preferences);
 
-  if (recommendedForUser.length === 0) {
+  const filterByPreferences = (beachesArr: any[], prefs: typeof preferences) => {
+    return beachesArr.filter(b => {
+      let match = false;
+      if (prefs.safe && (!b.alerts || b.alerts.length === 0)) match = true;
+      if (prefs.scenic && b.sustainabilityScore >= 75) match = true;
+      if (prefs.quiet && b.crowd === "low") match = true;
+      if (prefs.adventure && b.waveHeight >= 1.5) match = true;
+      return match;
+    });
+  };
+
+  let recommendedForUser = filterByPreferences(localBeaches, preferences)
+    .sort((a, b) => b.sustainabilityScore - a.sustainabilityScore)
+    .slice(0, 5);
+
+  const hasPreferences = Object.values(preferences).some(val => val);
+  if (!hasPreferences || recommendedForUser.length === 0) {
     recommendedForUser = [...localBeaches]
-      .sort((a, b) => b.waveHeight - a.waveHeight)
+      .sort((a, b) => b.sustainabilityScore - a.sustainabilityScore)
       .slice(0, 5);
   }
+
+  console.log("Filtered beaches:", recommendedForUser);
 
   const getCrowd = () => {
     const day = new Date().getDay();
@@ -127,24 +137,28 @@ export default function Recommendations() {
           <h1 className="header-title">Curated For You</h1>
           <p className="header-subtitle">Intelligently matched based on real-time safety, weather, and your preferences.</p>
         </div>
-        <select 
-          value={preference} 
-          onChange={(e) => setPreference(e.target.value)}
-          style={{
-            padding: '8px 16px',
-            borderRadius: 'var(--radius)',
-            background: 'var(--card-bg)',
-            border: '1px solid var(--border)',
-            color: 'var(--text-primary)',
-            fontSize: 14,
-            fontWeight: 500,
-            cursor: 'pointer'
-          }}
-        >
-          {preferences.map(p => (
-            <option key={p} value={p}>{p}</option>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {(['safe', 'scenic', 'quiet', 'adventure'] as const).map(key => (
+            <button
+              key={key}
+              onClick={() => togglePreference(key)}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '20px',
+                border: `1px solid ${preferences[key] ? 'var(--teal)' : 'var(--border)'}`,
+                background: preferences[key] ? 'rgba(0, 212, 255, 0.1)' : 'var(--card-bg)',
+                color: preferences[key] ? 'var(--teal)' : 'var(--text-secondary)',
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                textTransform: 'capitalize',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {key}
+            </button>
           ))}
-        </select>
+        </div>
       </div>
 
       {recommendedBeach && (
@@ -252,7 +266,7 @@ export default function Recommendations() {
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
                   <span style={{ color: 'var(--aqua-light)', fontSize: 13, fontStyle: 'italic' }}>
-                    Perfect for {preference}
+                    Perfect for your preferences
                   </span>
                   <ArrowRight size={16} color="var(--aqua-light)" />
                 </div>
