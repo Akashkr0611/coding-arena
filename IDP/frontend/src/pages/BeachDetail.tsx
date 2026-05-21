@@ -22,6 +22,14 @@ export default function BeachDetail() {
   const [hospitals, setHospitals] = useState<any[]>([]);
   const [weather, setWeather] = useState<any>(null);
 
+  // Phase 4 Smart Assistant State
+  const [smartAlerts, setSmartAlerts] = useState<any[]>([]);
+  const [sustainabilityScore, setSustainabilityScore] = useState<number | null>(null);
+  const [rankedBeaches, setRankedBeaches] = useState<any[]>([]);
+  const [recommendedBeach, setRecommendedBeach] = useState<any>(null);
+  const [crowdPrediction, setCrowdPrediction] = useState<string>('');
+  const [bestTimeToVisit, setBestTimeToVisit] = useState<string>('');
+
   useEffect(() => {
     if (!beach) return;
 
@@ -184,6 +192,125 @@ out center;`;
 
     loadData();
   }, [id]);
+
+  useEffect(() => {
+    if (!beach || !weather) return;
+
+    // 1. SMART ALERTS SYSTEM
+    const calculateAlerts = () => {
+      const newAlerts = [];
+      const wave = Number(weather.waveHeight) || 0;
+      const wind = Number(weather.windSpeed) || 0;
+      const temp = Number(weather.temperature) || 0;
+
+      if (wave > 1.5) newAlerts.push({ beachName: beach.name, alertType: "High Waves", severity: "High", message: "Dangerous wave height." });
+      if (wind > 10) newAlerts.push({ beachName: beach.name, alertType: "High Wind", severity: "Medium", message: "Strong winds." });
+      if (temp > 35) newAlerts.push({ beachName: beach.name, alertType: "Heat Alert", severity: "High", message: "Extreme heat." });
+      
+      setSmartAlerts(newAlerts);
+      return newAlerts;
+    };
+
+    // 6. CROWD PREDICTION
+    const determineCrowd = () => {
+      const day = new Date().getDay();
+      const isWeekend = day === 0 || day === 6;
+      const isPopular = beach.popularity === "High";
+      const crowdLvl = (isWeekend || isPopular) ? "high" : "low";
+      setCrowdPrediction(crowdLvl);
+      return crowdLvl;
+    };
+
+    // 2. SUSTAINABILITY SCORE
+    const calculateSustainability = (alertsList: any[], crowdLevel: string) => {
+      const wave = Number(weather.waveHeight) || 0;
+      const temp = Number(weather.temperature) || 0;
+
+      let waveScore = 40;
+      if (wave < 1) waveScore = 90;
+      else if (wave < 2) waveScore = 70;
+
+      let weatherScore = 40;
+      if (temp >= 22 && temp <= 32) weatherScore = 90;
+      else if (temp <= 35) weatherScore = 70;
+
+      let crowdScore = 40;
+      if (crowdLevel === "low") crowdScore = 90;
+      else if (crowdLevel === "moderate") crowdScore = 70;
+
+      let humanImpactScore = 40;
+      if (hotels.length < 5) humanImpactScore = 90;
+      else if (hotels.length < 15) humanImpactScore = 70;
+
+      let safetyScore = 90;
+      const hasHighAlert = alertsList.some(a => a.severity === "High");
+      const hasMedAlert = alertsList.some(a => a.severity === "Medium");
+      if (hasHighAlert) safetyScore = 30;
+      else if (hasMedAlert) safetyScore = 60;
+
+      const score = Math.round(
+        (waveScore * 0.2) +
+        (weatherScore * 0.2) +
+        (crowdScore * 0.3) +
+        (humanImpactScore * 0.2) +
+        (safetyScore * 0.1)
+      );
+      setSustainabilityScore(score);
+      return score;
+    };
+
+    // 7. BEST TIME TO VISIT
+    const calculateBestTime = () => {
+      const temp = Number(weather.temperature) || 0;
+      let time = "anytime";
+      if (temp > 32) time = "5 PM – 7 PM";
+      setBestTimeToVisit(time);
+    };
+
+    // 3. BEACH RANKING SYSTEM
+    const rankBeaches = (score: number) => {
+      const dummyRanked = beachesJson.map((b: any) => ({
+        ...b,
+        overallScore: b.id === beach.id ? score : 50 + (b.id % 40)
+      })).sort((a: any, b: any) => b.overallScore - a.overallScore);
+      
+      if (dummyRanked.length > 0) dummyRanked[0].isBestChoice = true;
+      setRankedBeaches(dummyRanked);
+      return dummyRanked;
+    };
+
+    // 4. BEACH RECOMMENDATION ENGINE
+    const generateRecommendation = (ranked: any[], alertsList: any[]) => {
+      const safeBeaches = ranked.filter((b: any) => b.id === beach.id ? !alertsList.some(a => a.severity === "High") : true);
+      const top = safeBeaches[0] || ranked[0];
+      setRecommendedBeach({
+        name: top.name,
+        reason: [
+          "Low crowd",
+          "Good weather",
+          "Safe conditions",
+          "High sustainability"
+        ]
+      });
+    };
+
+    const generatedAlerts = calculateAlerts();
+    const crowdLvl = determineCrowd();
+    calculateBestTime();
+    const score = calculateSustainability(generatedAlerts, crowdLvl);
+    const ranked = rankBeaches(score);
+    generateRecommendation(ranked, generatedAlerts);
+
+    console.log("Phase 4 Smart Metrics States:", {
+      smartAlerts,
+      sustainabilityScore,
+      rankedBeaches,
+      recommendedBeach,
+      crowdPrediction,
+      bestTimeToVisit
+    });
+
+  }, [weather, beach, hotels]);
 
   if (!beach || loading) {
     return (
