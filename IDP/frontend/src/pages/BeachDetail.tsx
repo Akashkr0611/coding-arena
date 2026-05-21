@@ -240,9 +240,7 @@ out center;`;
     // 6. CROWD PREDICTION
     const determineCrowd = () => {
       const day = new Date().getDay();
-      const isWeekend = day === 0 || day === 6;
-      const isPopular = beach.popularity === "High";
-      const crowdLvl = (isWeekend || isPopular) ? "high" : "low";
+      const crowdLvl = (day === 0 || day === 6) ? "high" : "moderate";
       setCrowdPrediction(crowdLvl);
       return crowdLvl;
     };
@@ -252,37 +250,34 @@ out center;`;
       const wave = Number(weather.waveHeight) || 0;
       const temp = Number(weather.temperature) || 0;
 
-      let waveScore = 40;
-      if (wave < 1) waveScore = 90;
-      else if (wave < 2) waveScore = 70;
+      let score = 50; // base score
 
-      let weatherScore = 40;
-      if (temp >= 22 && temp <= 32) weatherScore = 90;
-      else if (temp <= 35) weatherScore = 70;
+      // Wave
+      if (wave < 1) score += 20;
+      else if (wave < 2) score += 10;
+      else score -= 10;
 
-      let crowdScore = 40;
-      if (crowdLevel === "low") crowdScore = 90;
-      else if (crowdLevel === "moderate") crowdScore = 70;
+      // Weather
+      if (temp >= 24 && temp <= 32) score += 15;
+      else score -= 5;
 
-      let humanImpactScore = 40;
-      if (hotels.length < 5) humanImpactScore = 90;
-      else if (hotels.length < 15) humanImpactScore = 70;
+      // Crowd
+      if (crowdLevel === "low") score += 15;
+      else if (crowdLevel === "moderate") score += 5;
+      else score -= 15;
 
-      let safetyScore = 90;
-      const hasHighAlert = alertsList.some(a => a.severity === "High");
-      const hasMedAlert = alertsList.some(a => a.severity === "Medium");
-      if (hasHighAlert) safetyScore = 30;
-      else if (hasMedAlert) safetyScore = 60;
+      // Human impact (hotels)
+      if (hotels?.length < 5) score += 10;
+      else if (hotels?.length < 15) score += 5;
+      else score -= 10;
 
-      const score = Math.round(
-        (waveScore * 0.2) +
-        (weatherScore * 0.2) +
-        (crowdScore * 0.3) +
-        (humanImpactScore * 0.2) +
-        (safetyScore * 0.1)
-      );
-      setSustainabilityScore(score);
-      return score;
+      // Alerts
+      if (!alertsList || alertsList.length === 0) score += 10;
+      else score -= 10;
+
+      const finalScore = Math.max(30, Math.min(95, Math.round(score)));
+      setSustainabilityScore(finalScore);
+      return finalScore;
     };
 
     // 7. BEST TIME TO VISIT
@@ -424,7 +419,9 @@ out center;`;
                   )}
                   <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
                     <p style={{ margin: '0 0 4px 0', fontSize: 14, fontWeight: 600 }}>Best Time: {getBestTime(weather)}</p>
-                    <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>Best Months: {getBestMonths(beach.state)}</p>
+                    <p style={{ margin: '0 0 4px 0', fontSize: 14, fontWeight: 600 }}>Best Months: {getBestMonths(beach.state)}</p>
+                    <p style={{ margin: '0 0 4px 0', fontSize: 14, fontWeight: 600 }}>Sustainability Score: {sustainabilityScore} 🌱</p>
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 600, textTransform: 'capitalize' }}>Crowd Level: {crowdPrediction}</p>
                   </div>
                 </div>
               </div>

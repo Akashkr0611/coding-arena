@@ -8,20 +8,39 @@ export default function Dashboard() {
   const [localBeaches, setBeaches] = useState<any[]>(beaches);
   const [recommendedBeach, setRecommendedBeach] = useState<any>(null);
 
-  const calculateSustainability = (beach: any) => {
-    const waveScore = beach.waveHeight < 1 ? 90 : beach.waveHeight < 2 ? 70 : 40;
-    const weatherScore = beach.temp >= 22 && beach.temp <= 32 ? 90 : 70;
-    const crowdScore = beach.crowd === "low" ? 90 : beach.crowd === "moderate" ? 70 : 40;
-    const humanImpactScore = beach.hotels?.length < 5 ? 90 : beach.hotels?.length < 15 ? 70 : 40;
-    const safetyScore = beach.alerts?.length === 0 ? 90 : 50;
+  const getCrowd = () => {
+    const day = new Date().getDay();
+    if (day === 0 || day === 6) return "high";
+    return "moderate";
+  };
 
-    return Math.round(
-      waveScore * 0.2 +
-      weatherScore * 0.2 +
-      crowdScore * 0.3 +
-      humanImpactScore * 0.2 +
-      safetyScore * 0.1
-    );
+  const calculateSustainability = (b: any) => {
+    let score = 50; // base score
+
+    // Wave
+    if (b.waveHeight < 1) score += 20;
+    else if (b.waveHeight < 2) score += 10;
+    else score -= 10;
+
+    // Weather
+    if (b.temp >= 24 && b.temp <= 32) score += 15;
+    else score -= 5;
+
+    // Crowd
+    if (b.crowd === "low") score += 15;
+    else if (b.crowd === "moderate") score += 5;
+    else score -= 15;
+
+    // Human impact (hotels)
+    if (b.hotels?.length < 5) score += 10;
+    else if (b.hotels?.length < 15) score += 5;
+    else score -= 10;
+
+    // Alerts
+    if (!b.alerts || b.alerts.length === 0) score += 10;
+    else score -= 10;
+
+    return Math.max(30, Math.min(95, Math.round(score)));
   };
 
   useEffect(() => {
@@ -35,10 +54,13 @@ export default function Dashboard() {
   useEffect(() => {
     if (!beaches || beaches.length === 0) return;
       
-    const updated = beaches.map(b => ({
-      ...b,
-      sustainabilityScore: calculateSustainability(b)
-    }));
+    const updated = beaches.map((b: any) => {
+      const beachWithCrowd = { ...b, crowd: b.crowd || getCrowd() };
+      return {
+        ...beachWithCrowd,
+        sustainabilityScore: calculateSustainability(beachWithCrowd)
+      };
+    });
     setBeaches(updated);
 
     const sorted = [...updated].sort((a, b) => b.sustainabilityScore - a.sustainabilityScore);
