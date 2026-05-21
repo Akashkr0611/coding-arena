@@ -15,14 +15,16 @@ export default function Recommendations() {
   console.log("Fetched recommendations:", recommended);
 
   let recommendedForUser = localBeaches.filter(b => {
-    if (preference === "relaxation") return b.crowd !== "high";
-    if (preference === "adventure") return b.waveHeight > 1;
-    if (preference === "nature") return b.sustainabilityScore > 60;
+    if (preference === "relaxation") return b.crowd === "low" && b.waveHeight < 1.5;
+    if (preference === "adventure") return b.waveHeight >= 1;
+    if (preference === "nature") return b.sustainabilityScore >= 70;
     return true;
-  });
+  }).sort((a, b) => b.sustainabilityScore - a.sustainabilityScore).slice(0, 5);
 
   if (recommendedForUser.length === 0) {
-    recommendedForUser = localBeaches.slice(0, 5);
+    recommendedForUser = localBeaches
+      .sort((a, b) => b.sustainabilityScore - a.sustainabilityScore)
+      .slice(0, 5);
   }
 
   const getCrowd = () => {
@@ -32,32 +34,30 @@ export default function Recommendations() {
   };
 
   const calculateSustainability = (b: any) => {
-    let score = 50; // base score
+    let score = 60; // strong base
 
-    // Wave
-    if (b.waveHeight < 1) score += 20;
+    // Wave (good if calm)
+    if (b.waveHeight < 1) score += 15;
     else if (b.waveHeight < 2) score += 10;
-    else score -= 10;
+    else score += 5;
 
     // Weather
-    if (b.temp >= 24 && b.temp <= 32) score += 15;
-    else score -= 5;
+    if (b.temp >= 25 && b.temp <= 32) score += 10;
+    else score += 5;
 
     // Crowd
-    if (b.crowd === "low") score += 15;
+    if (b.crowd === "low") score += 10;
     else if (b.crowd === "moderate") score += 5;
-    else score -= 15;
 
-    // Human impact (hotels)
+    // Hotels (less = better)
     if (b.hotels?.length < 5) score += 10;
     else if (b.hotels?.length < 15) score += 5;
-    else score -= 10;
 
     // Alerts
     if (!b.alerts || b.alerts.length === 0) score += 10;
-    else score -= 10;
+    else score += 5;
 
-    return Math.max(30, Math.min(95, Math.round(score)));
+    return Math.min(95, Math.round(score));
   };
 
   useEffect(() => {

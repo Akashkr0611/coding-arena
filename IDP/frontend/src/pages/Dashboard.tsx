@@ -15,32 +15,30 @@ export default function Dashboard() {
   };
 
   const calculateSustainability = (b: any) => {
-    let score = 50; // base score
+    let score = 60; // strong base
 
-    // Wave
-    if (b.waveHeight < 1) score += 20;
+    // Wave (good if calm)
+    if (b.waveHeight < 1) score += 15;
     else if (b.waveHeight < 2) score += 10;
-    else score -= 10;
+    else score += 5;
 
     // Weather
-    if (b.temp >= 24 && b.temp <= 32) score += 15;
-    else score -= 5;
+    if (b.temp >= 25 && b.temp <= 32) score += 10;
+    else score += 5;
 
     // Crowd
-    if (b.crowd === "low") score += 15;
+    if (b.crowd === "low") score += 10;
     else if (b.crowd === "moderate") score += 5;
-    else score -= 15;
 
-    // Human impact (hotels)
+    // Hotels (less = better)
     if (b.hotels?.length < 5) score += 10;
     else if (b.hotels?.length < 15) score += 5;
-    else score -= 10;
 
     // Alerts
     if (!b.alerts || b.alerts.length === 0) score += 10;
-    else score -= 10;
+    else score += 5;
 
-    return Math.max(30, Math.min(95, Math.round(score)));
+    return Math.min(95, Math.round(score));
   };
 
   useEffect(() => {

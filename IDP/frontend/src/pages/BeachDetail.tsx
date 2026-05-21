@@ -250,32 +250,30 @@ out center;`;
       const wave = Number(weather.waveHeight) || 0;
       const temp = Number(weather.temperature) || 0;
 
-      let score = 50; // base score
+      let score = 60; // strong base
 
-      // Wave
-      if (wave < 1) score += 20;
+      // Wave (good if calm)
+      if (wave < 1) score += 15;
       else if (wave < 2) score += 10;
-      else score -= 10;
+      else score += 5;
 
       // Weather
-      if (temp >= 24 && temp <= 32) score += 15;
-      else score -= 5;
+      if (temp >= 25 && temp <= 32) score += 10;
+      else score += 5;
 
       // Crowd
-      if (crowdLevel === "low") score += 15;
+      if (crowdLevel === "low") score += 10;
       else if (crowdLevel === "moderate") score += 5;
-      else score -= 15;
 
-      // Human impact (hotels)
+      // Hotels (less = better)
       if (hotels?.length < 5) score += 10;
       else if (hotels?.length < 15) score += 5;
-      else score -= 10;
 
       // Alerts
       if (!alertsList || alertsList.length === 0) score += 10;
-      else score -= 10;
+      else score += 5;
 
-      const finalScore = Math.max(30, Math.min(95, Math.round(score)));
+      const finalScore = Math.min(95, Math.round(score));
       setSustainabilityScore(finalScore);
       return finalScore;
     };
