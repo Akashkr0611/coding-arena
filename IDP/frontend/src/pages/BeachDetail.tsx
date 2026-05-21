@@ -30,11 +30,18 @@ export default function BeachDetail() {
   const [crowdPrediction, setCrowdPrediction] = useState<string>('');
   const [bestTimeToVisit, setBestTimeToVisit] = useState<string>('');
 
-  const getBestTime = (temp: any) => {
-    if (!temp || temp === "--") return "Not available";
-    if (temp > 32) return "Morning or Evening";
-    if (temp < 20) return "Afternoon";
-    return "Anytime";
+  const getBestTime = (weatherObj: any) => {
+    if (!weatherObj) return "Not available";
+
+    const temp = weatherObj.temperature !== "--" ? Number(weatherObj.temperature) : 0;
+    const wind = Number(weatherObj.windSpeed) || 0;
+    const wave = Number(weatherObj.waveHeight) || 0;
+
+    if (temp > 34) return "Early Morning (6–9 AM) or Evening (5–7 PM)";
+    if (wave > 2 || wind > 12) return "Avoid midday, visit morning or evening";
+    if (temp >= 25 && temp <= 32 && wave < 1.5) return "Evening (4–7 PM) 🌅";
+
+    return "Morning or Evening";
   };
 
   const getBestMonths = (state: string) => {
@@ -416,7 +423,7 @@ out center;`;
                     <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Visibility: {weather.visibility / 1000} km</div>
                   )}
                   <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-                    <p style={{ margin: '0 0 4px 0', fontSize: 14, fontWeight: 600 }}>Best Time: {getBestTime(weather?.temperature)}</p>
+                    <p style={{ margin: '0 0 4px 0', fontSize: 14, fontWeight: 600 }}>Best Time: {getBestTime(weather)}</p>
                     <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>Best Months: {getBestMonths(beach.state)}</p>
                   </div>
                 </div>

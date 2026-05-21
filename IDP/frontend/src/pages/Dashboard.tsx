@@ -30,30 +30,32 @@ export default function Dashboard() {
         setStats({ total: beaches.length, alerts: aRes.data.length });
       })
       .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (!beaches || beaches.length === 0) return;
       
     const updated = beaches.map(b => ({
       ...b,
       sustainabilityScore: calculateSustainability(b)
     }));
     setBeaches(updated);
-  }, []);
 
-  useEffect(() => {
-    if (!localBeaches || localBeaches.length === 0) return;
-
-    const sorted = [...localBeaches].sort((a, b) => b.sustainabilityScore - a.sustainabilityScore);
+    const sorted = [...updated].sort((a, b) => b.sustainabilityScore - a.sustainabilityScore);
     const best = sorted[0];
 
-    setRecommendedBeach({
-      name: best.name,
-      reason: [
-        "Low crowd",
-        "Good weather",
-        "Safe conditions",
-        "High sustainability"
-      ]
-    });
-  }, [localBeaches]);
+    if (best) {
+      setRecommendedBeach({
+        name: best.name,
+        reason: [
+          "Low crowd",
+          "Good weather",
+          "Safe conditions",
+          "High sustainability"
+        ]
+      });
+    }
+  }, [beaches]);
 
   const getScoreColor = (score: number) => {
     if (score > 70) return 'var(--safe)';

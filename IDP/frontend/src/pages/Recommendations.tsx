@@ -8,8 +8,18 @@ export default function Recommendations() {
   const [recommended, setRecommended] = useState<any[]>([]);
   const [localBeaches, setBeaches] = useState<any[]>(beaches);
   const [recommendedBeach, setRecommendedBeach] = useState<any>(null);
+  const [preference] = useState("relaxation");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  console.log("Fetched recommendations:", recommended);
+
+  const recommendedForUser = localBeaches.filter(b => {
+    if (preference === "relaxation") return b.crowd === "low";
+    if (preference === "adventure") return b.waveHeight > 1.5;
+    if (preference === "nature") return b.sustainabilityScore > 70;
+    return true;
+  });
 
   const calculateSustainability = (beach: any) => {
     const waveScore = beach.waveHeight < 1 ? 90 : beach.waveHeight < 2 ? 70 : 40;
@@ -31,30 +41,32 @@ export default function Recommendations() {
     apiClient.get('/recommendations/1')
       .then(res => { setRecommended(res.data); setLoading(false); })
       .catch(err => { console.error('Failed to fetch recommendations:', err); setLoading(false); });
+  }, []);
+
+  useEffect(() => {
+    if (!beaches || beaches.length === 0) return;
       
     const updated = beaches.map(b => ({
       ...b,
       sustainabilityScore: calculateSustainability(b)
     }));
     setBeaches(updated);
-  }, []);
 
-  useEffect(() => {
-    if (!localBeaches || localBeaches.length === 0) return;
-
-    const sorted = [...localBeaches].sort((a, b) => b.sustainabilityScore - a.sustainabilityScore);
+    const sorted = [...updated].sort((a, b) => b.sustainabilityScore - a.sustainabilityScore);
     const best = sorted[0];
 
-    setRecommendedBeach({
-      name: best.name,
-      reason: [
-        "Low crowd",
-        "Good weather",
-        "Safe conditions",
-        "High sustainability"
-      ]
-    });
-  }, [localBeaches]);
+    if (best) {
+      setRecommendedBeach({
+        name: best.name,
+        reason: [
+          "Low crowd",
+          "Good weather",
+          "Safe conditions",
+          "High sustainability"
+        ]
+      });
+    }
+  }, [beaches]);
 
   if (loading) {
     return (
@@ -65,8 +77,6 @@ export default function Recommendations() {
     );
   }
 
-  const getScoreColor     = (s: number) => s >= 80 ? 'var(--safe)' : s >= 50 ? 'var(--moderate)' : 'var(--danger)';
-  const getScoreBg        = (s: number) => s >= 80 ? 'rgba(34,197,94,0.12)' : s >= 50 ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.12)';
   const getCrowdBadge     = (c: string) => c === 'Low' ? 'badge-safe' : c === 'Moderate' ? 'badge-mod' : 'badge-danger';
 
   return (
@@ -99,8 +109,7 @@ export default function Recommendations() {
         gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
         gap: 20
       }}>
-        {localBeaches.filter(b => b.sustainabilityScore).sort((a, b) => b.sustainabilityScore - a.sustainabilityScore).map(item => {
-          const score = item.sustainabilityScore;
+        {recommendedForUser.map(item => {
           const temp  = item.temp || 28 + (item.id % 5);
           const wave  = item.waveHeight || (0.5 + (item.id % 4) * 0.3).toFixed(1);
           const uv    = 5 + (item.id % 4);
@@ -135,20 +144,6 @@ export default function Recommendations() {
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
 
-              {/* Score badge (top-right) */}
-              <div style={{
-                position: 'absolute', top: 14, right: 14,
-                background: getScoreBg(score),
-                backdropFilter: 'blur(8px)',
-                border: `2px solid ${getScoreColor(score)}`,
-                color: getScoreColor(score),
-                width: 44, height: 44, borderRadius: '50%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 800, fontSize: 15, zIndex: 10
-              }}>
-                {score}
-              </div>
-
               {/* Gradient overlay */}
               <div style={{
                 position: 'absolute', inset: 0,
@@ -168,7 +163,7 @@ export default function Recommendations() {
                   </h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
                     <MapPin size={13} color="rgba(255,255,255,0.6)" />
-                    <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>{item.location}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>{item.location || item.state}</span>
                   </div>
                 </div>
 
@@ -197,7 +192,7 @@ export default function Recommendations() {
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
                   <span style={{ color: 'var(--aqua-light)', fontSize: 13, fontStyle: 'italic' }}>
-                    "{crowd} crowd · safe conditions today"
+                    Perfect for {preference}
                   </span>
                   <ArrowRight size={16} color="var(--aqua-light)" />
                 </div>
@@ -208,7 +203,7 @@ export default function Recommendations() {
       </div>
 
       {/* Empty state */}
-      {recommended.length === 0 && (
+      {recommendedForUser.length === 0 && (
         <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
           <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
             No recommendations yet. Update your preferences to get personalized beach suggestions!
