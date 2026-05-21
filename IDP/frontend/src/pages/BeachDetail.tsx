@@ -30,6 +30,25 @@ export default function BeachDetail() {
   const [crowdPrediction, setCrowdPrediction] = useState<string>('');
   const [bestTimeToVisit, setBestTimeToVisit] = useState<string>('');
 
+  const getBestTime = (temp: any) => {
+    if (!temp || temp === "--") return "Not available";
+    if (temp > 32) return "Morning or Evening";
+    if (temp < 20) return "Afternoon";
+    return "Anytime";
+  };
+
+  const getBestMonths = (state: string) => {
+    const map: any = {
+      Goa: "Nov – Feb",
+      Karnataka: "Oct – Mar",
+      Kerala: "Sep – Mar",
+      Maharashtra: "Nov – Feb",
+      "Tamil Nadu": "Dec – Mar",
+      TamilNadu: "Dec – Mar"
+    };
+    return map[state] || "Oct – Mar";
+  };
+
   useEffect(() => {
     if (!beach) return;
 
@@ -396,6 +415,10 @@ out center;`;
                   {weather.visibility !== undefined && (
                     <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Visibility: {weather.visibility / 1000} km</div>
                   )}
+                  <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+                    <p style={{ margin: '0 0 4px 0', fontSize: 14, fontWeight: 600 }}>Best Time: {getBestTime(weather?.temperature)}</p>
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>Best Months: {getBestMonths(beach.state)}</p>
+                  </div>
                 </div>
               </div>
             ) : (

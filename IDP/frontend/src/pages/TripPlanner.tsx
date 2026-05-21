@@ -437,7 +437,7 @@ export default function TripPlanner() {
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16, padding: 16 }}>
-            {trip.map((beach, idx) => {
+            {[...trip].sort((a, b) => (a.distance || 0) - (b.distance || 0)).map((beach, idx) => {
               const suitScore = getParamData(beach, 'Suitability Score');
               const temp = getParamData(beach, 'Temperature');
               

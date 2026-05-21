@@ -5,6 +5,24 @@ import beaches from '../data/beaches.json';
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ total: beaches.length, alerts: 0 });
+  const [localBeaches, setBeaches] = useState<any[]>(beaches);
+  const [recommendedBeach, setRecommendedBeach] = useState<any>(null);
+
+  const calculateSustainability = (beach: any) => {
+    const waveScore = beach.waveHeight < 1 ? 90 : beach.waveHeight < 2 ? 70 : 40;
+    const weatherScore = beach.temp >= 22 && beach.temp <= 32 ? 90 : 70;
+    const crowdScore = beach.crowd === "low" ? 90 : beach.crowd === "moderate" ? 70 : 40;
+    const humanImpactScore = beach.hotels?.length < 5 ? 90 : beach.hotels?.length < 15 ? 70 : 40;
+    const safetyScore = beach.alerts?.length === 0 ? 90 : 50;
+
+    return Math.round(
+      waveScore * 0.2 +
+      weatherScore * 0.2 +
+      crowdScore * 0.3 +
+      humanImpactScore * 0.2 +
+      safetyScore * 0.1
+    );
+  };
 
   useEffect(() => {
     apiClient.get('/alerts/1')
@@ -12,7 +30,30 @@ export default function Dashboard() {
         setStats({ total: beaches.length, alerts: aRes.data.length });
       })
       .catch(console.error);
+      
+    const updated = beaches.map(b => ({
+      ...b,
+      sustainabilityScore: calculateSustainability(b)
+    }));
+    setBeaches(updated);
   }, []);
+
+  useEffect(() => {
+    if (!localBeaches || localBeaches.length === 0) return;
+
+    const sorted = [...localBeaches].sort((a, b) => b.sustainabilityScore - a.sustainabilityScore);
+    const best = sorted[0];
+
+    setRecommendedBeach({
+      name: best.name,
+      reason: [
+        "Low crowd",
+        "Good weather",
+        "Safe conditions",
+        "High sustainability"
+      ]
+    });
+  }, [localBeaches]);
 
   const getScoreColor = (score: number) => {
     if (score > 70) return 'var(--safe)';
@@ -58,12 +99,15 @@ export default function Dashboard() {
     },
   ];
 
-  const topBeaches = [
-    { name: 'Radhanagar Beach', location: 'Andaman & Nicobar', score: 95 },
-    { name: 'Varkala Beach',    location: 'Kerala',             score: 92 },
-    { name: 'Tarkarli Beach',   location: 'Maharashtra',        score: 87 },
-    { name: 'Baga Beach',       location: 'Goa',                score: 38 },
-  ];
+  const topBeaches = localBeaches
+    .filter(b => b.sustainabilityScore)
+    .sort((a, b) => b.sustainabilityScore - a.sustainabilityScore)
+    .slice(0, 5)
+    .map(b => ({
+      name: b.name,
+      location: b.state,
+      score: b.sustainabilityScore
+    }));
 
   return (
     <div className="page-wrapper">
@@ -93,6 +137,22 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+
+      {recommendedBeach && (
+        <div className="card" style={{ marginBottom: '28px', background: 'var(--card-bg)' }}>
+          <h2 style={{ fontSize: 18, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Star size={20} color="var(--moderate)" /> Best Beach For You 🌊
+          </h2>
+          <h3 style={{ fontSize: 22, fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: 16 }}>{recommendedBeach.name}</h3>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {recommendedBeach.reason.map((r: string) => (
+              <li key={r} style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ color: 'var(--safe)' }}>✔</span> {r}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Top Beaches Table */}
       <div className="card card-flush">
