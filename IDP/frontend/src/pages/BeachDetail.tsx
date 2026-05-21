@@ -294,10 +294,9 @@ out center;`;
 
     // 7. BEST TIME TO VISIT
     const calculateBestTime = () => {
-      const temp = Number(weather.temperature) || 0;
-      let time = "anytime";
-      if (temp > 32) time = "5 PM – 7 PM";
-      setBestTimeToVisit(time);
+      const bestTime = getBestTime(weather);
+      setBestTimeToVisit(bestTime);
+      beach.bestTime = bestTime;
     };
 
     // 3. BEACH RANKING SYSTEM

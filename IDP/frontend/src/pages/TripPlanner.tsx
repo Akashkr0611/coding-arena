@@ -65,6 +65,16 @@ function sortTripByDistance(trip: any[], userLoc?: {lat: number, lon: number}) {
   return sorted;
 }
 
+const getTravelTime = (distanceKm: number) => {
+  if (!distanceKm || distanceKm === 9999) return "N/A";
+
+  const avgSpeed = 50;
+  const time = distanceKm / avgSpeed;
+
+  if (time < 1) return `${Math.round(time * 60)} min`;
+  return `${time.toFixed(1)} hr`;
+};
+
 function normalizeState(state: string) {
   if (!state) return '';
   return state
@@ -72,16 +82,6 @@ function normalizeState(state: string) {
     .replace("state", "")
     .trim();
 }
-
-const getBestTime = (weather: any) => {
-  if (!weather) return "Not available";
-  const temp = weather.temp;
-  const wind = weather.windSpeed || 0;
-  const wave = weather.waveHeight || 0;
-  if (temp > 34) return "Early Morning (6–9 AM) or Evening (5–7 PM)";
-  if (wave > 2 || wind > 12) return "Not recommended today";
-  return "Anytime (Safe conditions)";
-};
 
 const parameters = [
   { label: 'Suitability Score', key: 'Suitability Score', max: 100, color: '#14B8A6' },
@@ -163,15 +163,17 @@ export default function TripPlanner() {
       const route = data.routes?.[0]?.summary;
       if (!route) {
         console.error("Route data missing");
-        return { distance: Math.round(calculateDistance(user.lat, user.lon, beach.lat, beach.lon)), time: 'N/A', mode: 'Car 🚗' };
+        const dist = Math.round(calculateDistance(user.lat, user.lon, beach.lat, beach.lon));
+        return { distance: dist, time: getTravelTime(dist), mode: 'Car 🚗' };
       }
       
       const distanceKm = Math.round(route.distance / 1000);
       const timeHr = Math.round(route.duration / 3600);
-      return { distance: distanceKm, time: timeHr, mode: getTravelDetails(distanceKm).mode };
+      return { distance: distanceKm, time: timeHr > 0 ? `${timeHr} hr` : getTravelTime(distanceKm), mode: getTravelDetails(distanceKm).mode };
     } catch (e) {
       console.warn("Route API failed, fallback to Haversine");
-      return { distance: Math.round(calculateDistance(user.lat, user.lon, beach.lat, beach.lon)), time: 'N/A', mode: 'Car 🚗' };
+      const dist = Math.round(calculateDistance(user.lat, user.lon, beach.lat, beach.lon));
+      return { distance: dist, time: getTravelTime(dist), mode: 'Car 🚗' };
     }
   };
 
@@ -549,14 +551,10 @@ export default function TripPlanner() {
                       <div key={beach.id} style={{ borderLeft: '2px solid var(--teal)', paddingLeft: 12 }}>
                         <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>Day {idx + 1} → {beach.name}</div>
                         <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
-                          • Travel time: {beach.time !== undefined && beach.time !== 'N/A' ? `${beach.time} hr` : 'N/A'}
+                          • Travel time: {beach.time || 'N/A'}
                         </div>
                         <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                          • Best time: {getBestTime({ 
-                              temp: beach.temp || getParamData(beach, 'Temperature'), 
-                              windSpeed: beach.windSpeed || getParamData(beach, 'Wind Speed'), 
-                              waveHeight: beach.waveHeight || getParamData(beach, 'Wave Height') 
-                            })}
+                          • Best time: {beach.bestTime || "Evening (4–7 PM)"}
                         </div>
                         <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
                           • Crowd: {crowd}
