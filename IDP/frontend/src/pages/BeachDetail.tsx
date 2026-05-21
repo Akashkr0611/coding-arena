@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Cloud, MapPin, Camera, Activity, Building, HeartPulse } from 'lucide-react';
 import beachesJson from '../data/beaches.json';
+import { generateAlerts } from './Alerts';
 
 const UNSPLASH_API_KEY = "up8OQ9nV2nmmkUI2Fo96O9r2yMDeG5-6y76q4CA6NUw";
 const STORMGLASS_API_KEY = "92c0a3a8-5450-11f1-bdb4-0242ac120004-92c0a45c-5450-11f1-bdb4-0242ac120004";
@@ -240,17 +241,14 @@ out center;`;
 
     // 1. SMART ALERTS SYSTEM
     const calculateAlerts = () => {
-      const newAlerts = [];
-      const wave = Number(weather.waveHeight) || 0;
-      const wind = Number(weather.windSpeed) || 0;
-      const temp = Number(weather.temperature) || 0;
-
-      if (wave > 1.5) newAlerts.push({ beachName: beach.name, alertType: "High Waves", severity: "High", message: "Dangerous wave height." });
-      if (wind > 10) newAlerts.push({ beachName: beach.name, alertType: "High Wind", severity: "Medium", message: "Strong winds." });
-      if (temp > 35) newAlerts.push({ beachName: beach.name, alertType: "Heat Alert", severity: "High", message: "Extreme heat." });
-      
-      setSmartAlerts(newAlerts);
-      return newAlerts;
+      const beachAlerts = generateAlerts(beach).map((a: any) => ({
+        beachName: beach.name,
+        alertType: a.type,
+        severity: a.severity,
+        message: a.message
+      }));
+      setSmartAlerts(beachAlerts);
+      return beachAlerts;
     };
 
     // 6. CROWD PREDICTION
@@ -369,9 +367,15 @@ out center;`;
 
       <div style={{ marginBottom: 30 }}>
         <h1 className="header-title" style={{ marginBottom: 8 }}>{beach.name}</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-secondary)', fontSize: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-secondary)', fontSize: 14, marginBottom: 12 }}>
           <MapPin size={16} color="var(--teal)" />
           {beach.state || beach.location}
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {sustainabilityScore !== null && sustainabilityScore > 80 && <span className="badge" style={{ background: 'rgba(34,197,94,0.1)', color: 'var(--safe)', border: '1px solid rgba(34,197,94,0.2)' }}>🌿 Eco Friendly</span>}
+          {crowdPrediction === 'low' && <span className="badge" style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--info)', border: '1px solid rgba(59,130,246,0.2)' }}>🧘 Peaceful</span>}
+          {Number(weather?.waveHeight) >= 1.5 && <span className="badge" style={{ background: 'rgba(249,115,22,0.1)', color: '#f97316', border: '1px solid rgba(249,115,22,0.2)' }}>🏄 Adventure Spot</span>}
+          {smartAlerts.length === 0 && <span className="badge" style={{ background: 'rgba(34,197,94,0.1)', color: 'var(--safe)', border: '1px solid rgba(34,197,94,0.2)' }}>🛡 Safe</span>}
         </div>
       </div>
 

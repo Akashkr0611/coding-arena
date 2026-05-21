@@ -276,27 +276,38 @@ export default function TripPlanner() {
     const graph = document.getElementById("graph-section");
     if (!summary || !graph) return;
     
-    // Briefly hide export button for cleaner PDF
     const exportBtn = document.getElementById("export-btn");
     if (exportBtn) exportBtn.style.display = 'none';
 
     try {
       const pdf = new jsPDF("p", "mm", "a4");
-      
-      // PAGE 1
-      const canvas1 = await html2canvas(summary, { scale: 2, useCORS: true });
-      const img1 = canvas1.toDataURL("image/png");
-      const imgWidth1 = 210;
-      const imgHeight1 = (canvas1.height * imgWidth1) / canvas1.width;
-      pdf.addImage(img1, "PNG", 0, 0, imgWidth1, imgHeight1);
+      const pageHeight = 295;
+      let isFirstPage = true;
 
-      // PAGE 2
-      const canvas2 = await html2canvas(graph, { scale: 2, useCORS: true });
-      const img2 = canvas2.toDataURL("image/png");
-      const imgWidth2 = 210;
-      const imgHeight2 = (canvas2.height * imgWidth2) / canvas2.width;
-      pdf.addPage();
-      pdf.addImage(img2, "PNG", 0, 0, imgWidth2, imgHeight2);
+      const addElementToPdf = async (el: HTMLElement) => {
+        const canvas = await html2canvas(el, { scale: 2, useCORS: true });
+        const img = canvas.toDataURL("image/png");
+        const imgWidth = 210;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        if (!isFirstPage) pdf.addPage();
+        pdf.addImage(img, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        isFirstPage = false;
+
+        while (heightLeft >= 0) {
+          position -= pageHeight;
+          pdf.addPage();
+          pdf.addImage(img, "PNG", 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+      };
+
+      await addElementToPdf(summary);
+      await addElementToPdf(graph);
 
       pdf.save("trip-plan.pdf");
     } catch (err) {
@@ -498,6 +509,57 @@ export default function TripPlanner() {
           </div>
         )}
       </div>
+
+      {/* ── Smart Trip Summary ── */}
+      {trip.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div className="card" style={{ background: 'linear-gradient(to right, rgba(20,184,166,0.05), transparent)' }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Lightbulb size={18} color="var(--teal)" /> Smart Trip Summary
+            </h3>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+              <div>
+                <h4 style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 12 }}>Day-wise Itinerary</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {trip.map((beach: any, idx: number) => {
+                    const crowd = beach.id % 3 === 0 ? 'High' : beach.id % 2 === 0 ? 'Moderate' : 'Low';
+                    return (
+                      <div key={beach.id} style={{ borderLeft: '2px solid var(--teal)', paddingLeft: 12 }}>
+                        <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>Day {idx + 1} → {beach.name}</div>
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
+                          • Travel time: {beach.time !== undefined && beach.time !== 'N/A' ? `${beach.time} hr` : 'N/A'}
+                        </div>
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                          • Best time: {getParamData(beach, 'Temperature') > 32 ? '5 PM - 7 PM' : 'Anytime'}
+                        </div>
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                          • Crowd: {crowd}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              <div>
+                <h4 style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 12 }}>Overall Trip Assessment</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'var(--text-primary)' }}>
+                    <span style={{ color: 'var(--safe)' }}>✔</span> Mostly {trip.length > 0 && (trip.some((b: any) => b.id % 3 === 0) ? 'moderate' : 'low')} crowd beaches
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'var(--text-primary)' }}>
+                    <span style={{ color: 'var(--safe)' }}>✔</span> {trip.some((b: any) => getParamData(b, 'Temperature') > 35) ? 'Hot weather expected' : 'Good weather conditions'}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'var(--text-primary)' }}>
+                    <span style={{ color: 'var(--safe)' }}>✔</span> {trip.every((b: any) => getParamData(b, 'Suitability Score') > 50) ? 'Sustainable trip' : 'Mixed safety ratings'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Comparison Table ── */}
       <div style={{ marginBottom: 20 }}>
