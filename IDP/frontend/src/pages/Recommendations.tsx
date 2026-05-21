@@ -8,11 +8,14 @@ export default function Recommendations() {
   const [recommended, setRecommended] = useState<any[]>([]);
   const [localBeaches, setBeaches] = useState<any[]>(beaches);
   const [recommendedBeach, setRecommendedBeach] = useState<any>(null);
-  const [preference] = useState("Peaceful");
+  const [preference, setPreference] = useState("Peaceful");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   console.log("Fetched recommendations:", recommended);
+  console.log("Selected preference:", preference);
+
+  const preferences = ["Peaceful", "Adventure", "Scenic", "Family"];
 
   const filterByPreference = (beachesArr: any[], pref: string) => {
     if (pref === "Peaceful") {
@@ -119,9 +122,29 @@ export default function Recommendations() {
   return (
     <div className="page-wrapper">
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 className="header-title">Curated For You</h1>
-        <p className="header-subtitle">Intelligently matched based on real-time safety, weather, and your preferences.</p>
+      <div style={{ marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 className="header-title">Curated For You</h1>
+          <p className="header-subtitle">Intelligently matched based on real-time safety, weather, and your preferences.</p>
+        </div>
+        <select 
+          value={preference} 
+          onChange={(e) => setPreference(e.target.value)}
+          style={{
+            padding: '8px 16px',
+            borderRadius: 'var(--radius)',
+            background: 'var(--card-bg)',
+            border: '1px solid var(--border)',
+            color: 'var(--text-primary)',
+            fontSize: 14,
+            fontWeight: 500,
+            cursor: 'pointer'
+          }}
+        >
+          {preferences.map(p => (
+            <option key={p} value={p}>{p}</option>
+          ))}
+        </select>
       </div>
 
       {recommendedBeach && (

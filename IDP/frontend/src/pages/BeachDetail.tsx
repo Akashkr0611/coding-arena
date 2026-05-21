@@ -66,10 +66,26 @@ export default function BeachDetail() {
     console.log("Coordinates used:", lat, lng);
 
     const fetchImages = async () => {
-      const res = await fetch(
-        `https://api.unsplash.com/search/photos?query=${beach.name} ${beach.state} beach India&client_id=${UNSPLASH_API_KEY}&per_page=5`
-      );
-      return res.json();
+      const queries = [
+        `${beach.name} beach`,
+        `${beach.state} beach`,
+        "india beach"
+      ];
+
+      for (let q of queries) {
+        try {
+          const res = await fetch(
+            `https://api.unsplash.com/search/photos?query=${q}&client_id=${UNSPLASH_API_KEY}&per_page=5`
+          );
+          const data = await res.json();
+          if (data.results && data.results.length > 0) {
+            return data;
+          }
+        } catch (e) {
+          console.error("Image fetch error:", e);
+        }
+      }
+      return { results: [] };
     };
 
     const fetchMarineData = async () => {
@@ -369,7 +385,7 @@ out center;`;
             {images.map((img: any) => (
               <img 
                 key={img.id} 
-                src={img.urls.regular} 
+                src={img.urls?.regular || img.urls?.small} 
                 alt={img.alt_description || beach.name} 
                 style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 'var(--radius)' }}
               />
@@ -377,7 +393,17 @@ out center;`;
           </div>
         ) : (
           <div style={{ padding: 40, textAlign: 'center', background: 'var(--card-bg)', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
-            <p style={{ color: 'var(--text-muted)' }}>No images available for this location.</p>
+            <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>Showing default beach images</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+              {["https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80", "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=600&q=80", "https://images.unsplash.com/photo-1509233725247-49e657c54213?w=600&q=80"].map((src, idx) => (
+                <img 
+                  key={idx} 
+                  src={src} 
+                  alt="Default Beach" 
+                  style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 'var(--radius)' }}
+                />
+              ))}
+            </div>
           </div>
         )}
       </div>
