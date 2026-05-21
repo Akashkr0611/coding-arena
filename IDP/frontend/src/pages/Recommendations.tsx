@@ -27,29 +27,59 @@ export default function Recommendations() {
   console.log("Fetched recommendations:", recommended);
   console.log("Preferences:", preferences);
 
-  const filterByPreferences = (beachesArr: any[], prefs: typeof preferences) => {
-    return beachesArr.filter(b => {
-      let match = false;
-      if (prefs.safe && (!b.alerts || b.alerts.length === 0)) match = true;
-      if (prefs.scenic && b.sustainabilityScore >= 75) match = true;
-      if (prefs.quiet && b.crowd === "low") match = true;
-      if (prefs.adventure && b.waveHeight >= 1.5) match = true;
-      return match;
-    });
+  const scoreBeachForUser = (b: any, prefs: typeof preferences) => {
+    let score = 0;
+
+    // SAFE
+    if (prefs.safe) {
+      if (!b.alerts || b.alerts.length === 0) score += 30;
+      else score -= 10;
+    }
+
+    // SCENIC
+    if (prefs.scenic) {
+      score += (b.sustainabilityScore || 50) * 0.3;
+    }
+
+    // QUIET
+    if (prefs.quiet) {
+      if (b.crowd === "low") score += 25;
+      else if (b.crowd === "moderate") score += 10;
+    }
+
+    // ADVENTURE
+    if (prefs.adventure) {
+      if (b.waveHeight >= 1.5) score += 25;
+      else if (b.waveHeight >= 1) score += 10;
+    }
+
+    return score;
   };
 
-  let recommendedForUser = filterByPreferences(localBeaches, preferences)
-    .sort((a, b) => b.sustainabilityScore - a.sustainabilityScore)
+  let recommendedForUser = [...localBeaches]
+    .map(b => ({
+      ...b,
+      userScore: scoreBeachForUser(b, preferences)
+    }))
+    .sort((a, b) => b.userScore - a.userScore)
     .slice(0, 5);
 
-  const hasPreferences = Object.values(preferences).some(val => val);
-  if (!hasPreferences || recommendedForUser.length === 0) {
+  const noPreference =
+    !preferences.safe &&
+    !preferences.scenic &&
+    !preferences.quiet &&
+    !preferences.adventure;
+
+  if (noPreference) {
     recommendedForUser = [...localBeaches]
       .sort((a, b) => b.sustainabilityScore - a.sustainabilityScore)
       .slice(0, 5);
   }
 
-  console.log("Filtered beaches:", recommendedForUser);
+  console.log(
+    "Filtered beaches (scored):",
+    recommendedForUser.map(b => ({ name: b.name, score: b.userScore }))
+  );
 
   const getCrowd = () => {
     const day = new Date().getDay();
