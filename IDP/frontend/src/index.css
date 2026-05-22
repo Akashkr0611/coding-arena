@@ -937,3 +937,27 @@ body {
   margin-bottom: 12px;
   text-align: center;
 }
+
+/* Shimmer Loader */
+.shimmer-container {
+  padding: 20px;
+}
+
+.shimmer-card {
+  height: 80px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    #eeeeee 25%,
+    #dddddd 50%,
+    #eeeeee 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}

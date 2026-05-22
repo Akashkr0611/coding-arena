@@ -1,39 +1,114 @@
-# CoastWise 🌊
+# 🌊 CoastWise
 
-AI-powered beach recommendation and trip planning platform for India.
+## 🚀 Overview
 
-## Features
+CoastWise is an AI-powered coastal decision system that helps users choose the best beach based on real-time factors like weather, crowd, safety, and travel distance.
 
-- Explore 100+ Indian beaches
-- Smart recommendations based on preferences
-- Trip planner with route visualization
-- Live weather updates
-- Alerts system for beach conditions
-- AI chatbot assistant
-- Sustainability scoring
-- Interactive map with state-colored markers
+It focuses on decision-making rather than just displaying information.
 
-## Tech Stack
+---
+
+## 🎯 Problem Statement
+
+Users struggle to decide:
+- Which beach is best today?
+- Is it safe to visit?
+- How far is it?
+- What can they do there?
+
+Most platforms lack intelligent recommendations.
+
+---
+
+## 💡 Solution
+
+CoastWise:
+- Analyzes multiple conditions
+- Provides smart recommendations
+- Helps users avoid poor travel choices
+
+---
+
+## 🧠 Features
+
+### 🌍 Explore Page
+- Interactive map using Leaflet
+- State-based colored markers
+- Clickable beach icons
+
+### 📍 Beach Details
+- Weather report
+- Distance & travel time
+- Crowd level
+- Safety indicator
+- Sustainability score
+- Best time to visit
+- Nearby tourist places
+- Hotels & hospitals
+
+### 🧭 Trip Planner
+- Add beaches to trip
+- Route visualization
+- Travel comparison
+
+### 🤖 Chatbot
+- Answers queries in bullet format
+- Suggests beaches intelligently
+
+### 🚨 Alerts
+- Displays coastal alerts
+
+### 📊 Recommendation System
+- Uses weather, crowd, safety, distance
+
+---
+
+## ⚙️ Tech Stack
 
 - React.js
 - Leaflet.js
 - OpenWeather API
 - Foursquare API
-- Stormglass API
+- OpenRoute API
 
-## Setup Instructions
+---
 
-1. Clone the repository
-2. Install dependencies:
-   npm install
-3. Add your API keys
-4. Run:
-   npm start
+## 🧠 System Logic
 
-## Project Status
+Combines:
+- Weather conditions
+- Crowd levels
+- Travel distance
+- Safety factors
 
-Completed and fully functional.
+To generate:
+- Recommendations
+- Rankings
+- Decisions
 
-## Author
+---
+
+## 🎨 UI/UX
+
+- Loading animations
+- Clean layout
+- State-colored markers
+
+---
+
+## ▶️ Run Project
+
+npm install  
+npm start  
+
+---
+
+## 👨💻 Author
 
 Akash K R
+
+---
+
+## ⭐ Conclusion
+
+CoastWise helps users make smarter coastal travel decisions using real-time data and intelligent analysis.
