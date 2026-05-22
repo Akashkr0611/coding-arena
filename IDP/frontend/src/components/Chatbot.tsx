@@ -24,6 +24,15 @@ export default function Chatbot() {
       .trim();
   };
 
+  const formatToBullets = (text: string) => {
+    return text
+      .split(/[\.\n]/)
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .map(line => `• ${line}`)
+      .join("\n");
+  };
+
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -50,7 +59,8 @@ export default function Chatbot() {
       });
 
       const data = await res.json();
-      setMessages(prev => [...prev, { role: 'bot', text: cleanResponse(data.reply) }]);
+      const formattedResponse = formatToBullets(cleanResponse(data.reply));
+      setMessages(prev => [...prev, { role: 'bot', text: formattedResponse }]);
     } catch (error) {
       console.error('Chat Frontend Error:', error);
       setMessages(prev => [...prev, { role: 'bot', text: cleanResponse('Oops! I am having trouble connecting to the server.') }]);
@@ -95,7 +105,9 @@ export default function Chatbot() {
                 key={i}
                 className={`chat-message ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-bot'}`}
               >
-                {msg.text}
+                {msg.text.split("\n").map((line, idx) => (
+                  <div key={idx}>{line}</div>
+                ))}
               </div>
             ))}
 
