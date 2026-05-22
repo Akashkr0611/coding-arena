@@ -1,22 +1,39 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet';
 import L from 'leaflet';
-import { X } from 'lucide-react';
+
 import beachesJson from '../data/beaches.json';
 
-const createDotIcon = (color: string) => {
-  return L.divIcon({
-    className: 'custom-dot-icon',
-    html: `<div style="background-color:${color};width:14px;height:14px;border-radius:50%;border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.25);"></div>`,
-    iconSize: [14, 14] as L.PointExpression,
-    iconAnchor: [7, 7] as L.PointExpression
-  });
+const stateColors: Record<string, string> = {
+  "Goa": "#e74c3c",
+  "Karnataka": "#27ae60",
+  "Kerala": "#f39c12",
+  "Maharashtra": "#2980b9",
+  "Tamil Nadu": "#8e44ad",
+  "Andhra Pradesh": "#f1c40f",
+  "Odisha": "#e67e22",
+  "West Bengal": "#1abc9c",
+  "Gujarat": "#d35400",
+  "Andaman": "#2c3e50",
+  "Daman": "#7f8c8d",
+  "Puducherry": "#c0392b"
 };
 
-const greenIcon  = createDotIcon('#22C55E');
-const yellowIcon = createDotIcon('#F59E0B');
-const redIcon    = createDotIcon('#EF4444');
+const getMarkerIcon = (state: string) => {
+  const color = stateColors[state] || "#95a5a6";
+
+  return L.divIcon({
+    className: "",
+    html: `<div style="
+      background:${color};
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      border:2px solid white;
+    "></div>`
+  });
+};
 
 export default function Home() {
   const [beaches, setBeaches] = useState<any[]>([]);
@@ -24,7 +41,7 @@ export default function Home() {
   const [selectedState, setSelectedState] = useState<string>('All');
   const [selectedBeach, setSelectedBeach] = useState<any>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
-  const [trip, setTrip] = useState<any[]>([]);
+
   
   const navigate = useNavigate();
 
@@ -38,8 +55,6 @@ export default function Home() {
       });
     }
     
-    const savedTrip = JSON.parse(localStorage.getItem('trip') || '[]');
-    setTrip(savedTrip);
   }, []);
 
   const handleMarkerClick = (beach: any) => {
@@ -67,11 +82,7 @@ export default function Home() {
     }
   };
 
-  const getMarkerIcon = (beach: any) => {
-    if (beach.popularity === 'high') return redIcon;
-    if (beach.popularity === 'medium') return yellowIcon;
-    return greenIcon;
-  };
+
 
   if (loading) {
     return (
@@ -116,20 +127,23 @@ export default function Home() {
           <Marker
             key={beach.id}
             position={[beach.lat, beach.lon]}
-            icon={getMarkerIcon(beach)}
+            icon={getMarkerIcon(beach.state)}
             eventHandlers={{ click: () => handleMarkerClick(beach) }}
-          />
+          >
+            <Popup>
+              <div className="popup-box">
+                <h4>{beach.name}</h4>
+                <p>{beach.state}</p>
+                <button className="btn btn-secondary" onClick={() => handleViewDetails(beach)}>
+                  View Details
+                </button>
+                <button className="btn btn-primary" onClick={() => addToTrip(beach)}>
+                  Add to Trip
+                </button>
+              </div>
+            </Popup>
+          </Marker>
         ))}
-
-        {trip.length > 0 && (
-          <Polyline 
-            positions={trip.map((b: any) => [b.lat, b.lon] as [number, number])} 
-            color="blue" 
-            weight={3}
-            opacity={0.6}
-            dashArray="10, 10"
-          />
-        )}
         
         {selectedBeach && userLocation && (
           <Polyline 
@@ -141,46 +155,8 @@ export default function Home() {
           />
         )}
       </MapContainer>
-
-      {selectedBeach && (
-        <div className="map-popup" style={{
-          position: 'absolute', bottom: 20, left: 20, zIndex: 1000,
-          background: 'var(--bg)', padding: '12px', borderRadius: '8px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: '1px solid var(--border)',
-          maxWidth: '250px', width: '100%'
-        }}>
-          <button
-            onClick={() => setSelectedBeach(null)}
-            style={{
-              position: 'absolute', top: 10, right: 10,
-              background: 'none', border: 'none', cursor: 'pointer',
-              color: 'var(--text-muted)'
-            }}
-          >
-            <X size={16} />
-          </button>
-          
-          <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: 'var(--text-primary)' }}>{selectedBeach.name}</h3>
-          <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: 'var(--text-secondary)' }}>{selectedBeach.state}</p>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <button 
-              className="btn btn-secondary"
-              onClick={() => handleViewDetails(selectedBeach)}
-              style={{ width: '100%', padding: '8px' }}
-            >
-              View Details
-            </button>
-            <button 
-              className="btn btn-primary"
-              onClick={() => addToTrip(selectedBeach)}
-              style={{ width: '100%', padding: '8px' }}
-            >
-              Add to Trip
-            </button>
-          </div>
-        </div>
-      )}
     </div>
+
+
   );
 }
