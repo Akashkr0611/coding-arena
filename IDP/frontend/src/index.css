@@ -965,3 +965,41 @@ body {
   position: relative;
   z-index: 1;
 }
+
+/* Top Progress Bar */
+.top-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: var(--teal);
+  z-index: 9999;
+  animation: topLoading 2s infinite ease-in-out;
+  transform-origin: 0% 50%;
+}
+
+@keyframes topLoading {
+  0% { transform: scaleX(0); }
+  50% { transform: scaleX(0.5); }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+
+/* Skeleton UI */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #eeeeee 25%,
+    #dddddd 50%,
+    #eeeeee 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.skeleton.title { height: 30px; width: 60%; }
+.skeleton.card { height: 100px; width: 100%; }
+.skeleton.small { height: 50px; width: 100%; }
+.skeleton.image { height: 160px; width: 100%; }

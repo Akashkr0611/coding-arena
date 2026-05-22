@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Cloud, MapPin, Camera, Activity, Building, HeartPulse } from 'lucide-react';
 import beachesJson from '../data/beaches.json';
-import PremiumLoader from '../components/PremiumLoader';
+import { TopLoader } from '../components/TopLoader';
 import { generateAlerts } from './Alerts';
 
 const UNSPLASH_API_KEY = "up8OQ9nV2nmmkUI2Fo96O9r2yMDeG5-6y76q4CA6NUw";
@@ -18,10 +18,10 @@ export default function BeachDetail() {
   const [loading, setLoading] = useState(true);
   const [beach] = useState<any>(initialBeach);
   
-  const [images, setImages] = useState<any[]>([]);
-  const [activities, setActivities] = useState<any[]>([]);
-  const [hotels, setHotels] = useState<any[]>([]);
-  const [hospitals, setHospitals] = useState<any[]>([]);
+  const [images, setImages] = useState<any[] | null>(null);
+  const [activities, setActivities] = useState<any[] | null>(null);
+  const [hotels, setHotels] = useState<any[] | null>(null);
+  const [hospitals, setHospitals] = useState<any[] | null>(null);
   const [weather, setWeather] = useState<any>(null);
 
   // Phase 4 Smart Assistant State
@@ -165,69 +165,63 @@ out center;`;
       return res.json();
     };
 
-    const loadData = async () => {
-      try {
-        const [
-          imgs,
-          marineRaw,
-          htls,
-          hsps,
-          wRes
-        ] = await Promise.all([
-          fetchImages(),
-          fetchMarineData(),
-          fetchHotels(),
-          fetchHospitals(),
-          fetchWeather().catch(() => null)
-        ]);
+    const loadData = () => {
+      setLoading(true);
 
-        const activitiesByState: any = {
-          Goa: ["Water sports like parasailing", "Beach nightlife and parties", "Scuba diving", "Sunset viewing"],
-          Karnataka: ["Boating", "Fishing", "Temple visits", "Sunset photography"],
-          Kerala: ["Backwater rides", "Houseboat experience", "Ayurveda relaxation", "Photography"],
-          Maharashtra: ["Jet skiing", "Fort exploration", "Local seafood tasting", "Beach walks"],
-          "Tamil Nadu": ["Surfing", "Temple visits", "Boat rides", "Sunrise viewing"]
-        };
-        const staticActivities = activitiesByState[beach.state] || ["Relaxing", "Photography", "Walking"];
+      const pImages = fetchImages()
+        .then(imgs => setImages(imgs.results || []))
+        .catch(() => setImages([]));
 
-        setImages(imgs.results || []);
-        setActivities(staticActivities.map((name: string) => ({ name })));
-        setHotels(htls || []);
-        setHospitals(hsps || []);
+      const pHotels = fetchHotels()
+        .then(htls => setHotels(htls || []))
+        .catch(() => setHotels([]));
 
-        const baseWeather: any = {};
-        
-        if (wRes && wRes.main) {
-          const temp = wRes.main.temp;
-          const feels = wRes.main.feels_like;
-          
-          baseWeather.temperature = temp !== undefined ? Math.round(temp) : "--";
-          baseWeather.feelsLike = feels !== undefined ? Math.round(feels) : undefined;
-          baseWeather.humidity = wRes.main.humidity;
-          baseWeather.pressure = wRes.main.pressure;
-          baseWeather.visibility = wRes.visibility;
-          baseWeather.windSpeed = wRes.wind?.speed ? Math.round(wRes.wind.speed * 3.6) : undefined;
-          if (wRes.weather && wRes.weather[0]) {
-             baseWeather.condition = wRes.weather[0].description;
+      const pHospitals = fetchHospitals()
+        .then(hsps => setHospitals(hsps || []))
+        .catch(() => setHospitals([]));
+
+      const pWeather = Promise.all([fetchMarineData(), fetchWeather().catch(() => null)])
+        .then(([marineRaw, wRes]) => {
+          const baseWeather: any = {};
+          if (wRes && wRes.main) {
+            const temp = wRes.main.temp;
+            const feels = wRes.main.feels_like;
+            baseWeather.temperature = temp !== undefined ? Math.round(temp) : "--";
+            baseWeather.feelsLike = feels !== undefined ? Math.round(feels) : undefined;
+            baseWeather.humidity = wRes.main.humidity;
+            baseWeather.pressure = wRes.main.pressure;
+            baseWeather.visibility = wRes.visibility;
+            baseWeather.windSpeed = wRes.wind?.speed ? Math.round(wRes.wind.speed * 3.6) : undefined;
+            if (wRes.weather && wRes.weather[0]) {
+               baseWeather.condition = wRes.weather[0].description;
+            }
           }
-        }
+          if (marineRaw && marineRaw.hours && marineRaw.hours.length > 0) {
+             const marine = marineRaw.hours[0];
+             baseWeather.waveHeight = marine.waveHeight?.noaa || 0;
+             baseWeather.waterTemp = marine.waterTemperature?.noaa || 0;
+             baseWeather.currentDirection = marine.currentDirection?.noaa || 0;
+             if (!baseWeather.windSpeed && marine.windSpeed?.noaa) {
+               baseWeather.windSpeed = marine.windSpeed?.noaa;
+             }
+          }
+          setWeather(baseWeather);
+        })
+        .catch(() => setWeather({}));
 
-        if (marineRaw && marineRaw.hours && marineRaw.hours.length > 0) {
-           const marine = marineRaw.hours[0];
-           baseWeather.waveHeight = marine.waveHeight?.noaa || 0;
-           baseWeather.waterTemp = marine.waterTemperature?.noaa || 0;
-           baseWeather.currentDirection = marine.currentDirection?.noaa || 0;
-           if (!baseWeather.windSpeed && marine.windSpeed?.noaa) {
-             baseWeather.windSpeed = marine.windSpeed?.noaa;
-           }
-        }
-        setWeather(baseWeather);
+      const activitiesByState: any = {
+        Goa: ["Water sports like parasailing", "Beach nightlife and parties", "Scuba diving", "Sunset viewing"],
+        Karnataka: ["Boating", "Fishing", "Temple visits", "Sunset photography"],
+        Kerala: ["Backwater rides", "Houseboat experience", "Ayurveda relaxation", "Photography"],
+        Maharashtra: ["Jet skiing", "Fort exploration", "Local seafood tasting", "Beach walks"],
+        "Tamil Nadu": ["Surfing", "Temple visits", "Boat rides", "Sunrise viewing"]
+      };
+      const staticActivities = activitiesByState[beach.state] || ["Relaxing", "Photography", "Walking"];
+      setTimeout(() => { setActivities(staticActivities.map((name: string) => ({ name }))); }, 400);
 
-      } catch (err) {
-        console.error("Error loading beach details:", err);
-      } finally {
+      Promise.allSettled([pImages, pHotels, pHospitals, pWeather]).finally(() => {
         setLoading(false);
-      }
+      });
     };
 
     loadData();
@@ -277,8 +271,9 @@ out center;`;
       else if (crowdLevel === "moderate") score += 5;
 
       // Hotels (less = better)
-      if (hotels?.length < 5) score += 10;
-      else if (hotels?.length < 15) score += 5;
+      const hotelsCount = hotels ? hotels.length : 0;
+      if (hotelsCount < 5) score += 10;
+      else if (hotelsCount < 15) score += 5;
 
       // Alerts
       if (!alertsList || alertsList.length === 0) score += 10;
@@ -316,11 +311,11 @@ out center;`;
 
   }, [weather, beach, hotels]);
 
-  if (!beach || loading) {
-    return <PremiumLoader />;
-  }
+  if (!beach) return null;
 
   return (
+    <>
+    <TopLoader loading={loading} />
     <div className="page-wrapper" style={{ padding: 20 }}>
       {/* Header */}
       <button
@@ -350,7 +345,9 @@ out center;`;
         <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 18, marginBottom: 16 }}>
           <Camera size={20} color="var(--teal)" /> Image Gallery
         </h3>
-        {images.length > 0 ? (
+        {images === null ? (
+          <div className="skeleton image"></div>
+        ) : images.length > 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
             {images.map((img: any) => (
               <img 
@@ -386,7 +383,9 @@ out center;`;
             <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, marginBottom: 16 }}>
               <Cloud size={18} color="var(--teal)" /> Live Weather
             </h3>
-            {weather ? (
+            {weather === null ? (
+              <div className="skeleton card" style={{ height: 250 }}></div>
+            ) : weather ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
                 <div style={{ fontSize: 42, fontWeight: 800 }}>
                   {weather.temperature !== "--" ? `${weather.temperature}°C` : "--"}
@@ -446,7 +445,9 @@ out center;`;
             <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, marginBottom: 16 }}>
               <Activity size={18} color="var(--teal)" /> Things to Do
             </h3>
-            {activities.length > 0 ? (
+            {activities === null ? (
+              <div className="skeleton small"></div>
+            ) : activities.length > 0 ? (
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {activities.map((act: any, idx: number) => (
                   <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
@@ -465,7 +466,9 @@ out center;`;
             <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, marginBottom: 16 }}>
               <Building size={18} color="var(--teal)" /> Nearby Hotels
             </h3>
-            {hotels.length > 0 ? (
+            {hotels === null ? (
+              <div className="skeleton card"></div>
+            ) : hotels.length > 0 ? (
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {hotels.map((hotel: any, idx: number) => (
                   <li key={idx} style={{ fontSize: 14, display: 'flex', justifyContent: 'space-between' }}>
@@ -476,7 +479,7 @@ out center;`;
                   </li>
                 ))}
               </ul>
-            ) : hotels.length === 0 && hospitals.length === 0 ? (
+            ) : hotels && hotels.length === 0 && hospitals && hospitals.length === 0 ? (
               <p style={{ color: 'var(--text-muted)' }}>Nearby facilities available in closest town</p>
             ) : null}
           </div>
@@ -486,7 +489,9 @@ out center;`;
             <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, marginBottom: 16 }}>
               <HeartPulse size={18} color="#EF4444" /> Nearby Hospitals
             </h3>
-            {hospitals.length > 0 ? (
+            {hospitals === null ? (
+              <div className="skeleton card"></div>
+            ) : hospitals.length > 0 ? (
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {hospitals.map((hosp: any, idx: number) => (
                   <li key={idx} style={{ fontSize: 14, display: 'flex', justifyContent: 'space-between' }}>
@@ -497,7 +502,7 @@ out center;`;
                   </li>
                 ))}
               </ul>
-            ) : hotels.length === 0 && hospitals.length === 0 ? (
+            ) : hotels && hotels.length === 0 && hospitals && hospitals.length === 0 ? (
               <p style={{ color: 'var(--text-muted)' }}>Nearby facilities available in closest town</p>
             ) : null}
           </div>
@@ -505,5 +510,6 @@ out center;`;
         </div>
       </div>
     </div>
+    </>
   );
 }
