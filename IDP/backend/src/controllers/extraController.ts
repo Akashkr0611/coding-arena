@@ -209,7 +209,10 @@ Always be specific. Never give vague answers.`;
 
         let result: any = await Promise.race([apiPromise, timeoutPromise]);
         let response = await result.response;
-        let text = response.text().replace(/\*\*/g, "");
+        const cleanResponse = (txt: string) => {
+          return txt.replace(/\*\*/g, "").replace(/\*/g, "").replace(/__/g, "").trim();
+        };
+        let text = cleanResponse(response.text());
 
         console.log("Gemini response:", text);
 
