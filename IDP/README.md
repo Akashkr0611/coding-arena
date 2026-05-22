@@ -260,7 +260,5 @@ VITE_API_URL=http://localhost:3000/api
 ## 👨‍💻 AUTHOR
 
 **Akash K R**  
-Passionate full-stack developer focused on AI integration and performant user experiences.
 
----
-*Built with ❤️ for better coastal decision-making.*
+
