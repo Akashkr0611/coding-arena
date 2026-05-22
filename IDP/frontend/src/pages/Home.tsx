@@ -27,8 +27,8 @@ const getMarkerIcon = (state: string) => {
     className: "",
     html: `<div style="
       background:${color};
-      width:10px;
-      height:10px;
+      width:14px;
+      height:14px;
       border-radius:50%;
       border:2px solid white;
     "></div>`

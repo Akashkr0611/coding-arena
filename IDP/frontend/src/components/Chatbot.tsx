@@ -16,6 +16,14 @@ export default function Chatbot() {
 
   useEffect(() => { scrollToBottom(); }, [messages]);
 
+  const cleanResponse = (text: string) => {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/\*/g, "")
+      .replace(/__/g, "")
+      .trim();
+  };
+
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -42,10 +50,10 @@ export default function Chatbot() {
       });
 
       const data = await res.json();
-      setMessages(prev => [...prev, { role: 'bot', text: data.reply }]);
+      setMessages(prev => [...prev, { role: 'bot', text: cleanResponse(data.reply) }]);
     } catch (error) {
       console.error('Chat Frontend Error:', error);
-      setMessages(prev => [...prev, { role: 'bot', text: 'Oops! I am having trouble connecting to the server.' }]);
+      setMessages(prev => [...prev, { role: 'bot', text: cleanResponse('Oops! I am having trouble connecting to the server.') }]);
     } finally {
       setLoading(false);
     }
