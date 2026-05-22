@@ -26,11 +26,18 @@ export default function Chatbot() {
 
   const formatToBullets = (text: string) => {
     return text
-      .split(/[\.\n]/)
+      .split("\n")
       .map(line => line.trim())
       .filter(line => line.length > 0)
       .map(line => `• ${line}`)
       .join("\n");
+  };
+
+  const formatSmart = (text: string) => {
+    if (!text.includes("\n")) {
+      return `• ${text}`;
+    }
+    return formatToBullets(text);
   };
 
   const handleSend = async () => {
@@ -59,7 +66,7 @@ export default function Chatbot() {
       });
 
       const data = await res.json();
-      const formattedResponse = formatToBullets(cleanResponse(data.reply));
+      const formattedResponse = formatSmart(cleanResponse(data.reply));
       setMessages(prev => [...prev, { role: 'bot', text: formattedResponse }]);
     } catch (error) {
       console.error('Chat Frontend Error:', error);
