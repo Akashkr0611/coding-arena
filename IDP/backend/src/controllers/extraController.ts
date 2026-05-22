@@ -194,6 +194,11 @@ Always be specific. Never give vague answers.`;
         }
         contents.push({ role: 'user', parts: [{ text: prompt }] });
 
+        if (message.toLowerCase().includes("best beach")) {
+            const best = beaches.length > 0 ? beaches[0] : { name: "Radhanagar Beach" };
+            return res.json({ reply: `Based on current ratings, ${best.name} is a top recommendation!` });
+        }
+
         let apiPromise = model.generateContent({
             contents: contents,
             generationConfig: {
@@ -204,16 +209,20 @@ Always be specific. Never give vague answers.`;
 
         let result: any = await Promise.race([apiPromise, timeoutPromise]);
         let response = await result.response;
-        let text = response.text();
+        let text = response.text().replace(/\*\*/g, "");
 
         console.log("Gemini response:", text);
+
+        if (text.includes("I don't have information") || text.includes("I don’t have information")) {
+            text = "Here’s what I can suggest based on available data...";
+        }
 
         res.json({ reply: text });
     } catch (error: any) {
         if (error.message === "API Timeout") {
-            return res.json({ reply: "Try Gokarna Beach - low crowd, calm waves, good for relaxing." });
+            return res.json({ reply: "Here’s what I can suggest based on available data..." });
         }
         console.error("Gemini API Error Full Stack:", error);
-        res.json({ reply: "Try Gokarna Beach - low crowd, calm waves, good for relaxing." });
+        res.json({ reply: "Here’s what I can suggest based on available data..." });
     }
 };

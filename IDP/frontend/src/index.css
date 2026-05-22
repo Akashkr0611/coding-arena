@@ -629,8 +629,8 @@ body {
   position: fixed;
   bottom: 28px;
   right: 28px;
-  width: 370px;
-  height: 520px;
+  width: 600px;
+  height: 70vh;
   background: var(--card-bg);
   border-radius: var(--radius-lg);
   display: flex;

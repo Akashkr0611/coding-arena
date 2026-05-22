@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import { X } from 'lucide-react';
 import beachesJson from '../data/beaches.json';
@@ -23,12 +23,23 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [selectedState, setSelectedState] = useState<string>('All');
   const [selectedBeach, setSelectedBeach] = useState<any>(null);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [trip, setTrip] = useState<any[]>([]);
   
   const navigate = useNavigate();
 
   useEffect(() => {
     setBeaches(beachesJson);
     setLoading(false);
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        setUserLocation([pos.coords.latitude, pos.coords.longitude]);
+      });
+    }
+    
+    const savedTrip = JSON.parse(localStorage.getItem('trip') || '[]');
+    setTrip(savedTrip);
   }, []);
 
   const handleMarkerClick = (beach: any) => {
@@ -109,6 +120,26 @@ export default function Home() {
             eventHandlers={{ click: () => handleMarkerClick(beach) }}
           />
         ))}
+
+        {trip.length > 0 && (
+          <Polyline 
+            positions={trip.map((b: any) => [b.lat, b.lon] as [number, number])} 
+            color="blue" 
+            weight={3}
+            opacity={0.6}
+            dashArray="10, 10"
+          />
+        )}
+        
+        {selectedBeach && userLocation && (
+          <Polyline 
+            positions={[userLocation, [selectedBeach.lat, selectedBeach.lon]]} 
+            color="red" 
+            weight={3}
+            opacity={0.8}
+            dashArray="5, 10"
+          />
+        )}
       </MapContainer>
 
       {selectedBeach && (

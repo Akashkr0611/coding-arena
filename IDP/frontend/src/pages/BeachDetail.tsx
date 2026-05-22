@@ -445,10 +445,13 @@ out center;`;
                     <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Visibility: {weather.visibility / 1000} km</div>
                   )}
                   <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+                    {beach.distance && <p style={{ margin: '0 0 4px 0', fontSize: 14, fontWeight: 600 }}>Distance: {beach.distance} km</p>}
+                    {beach.time && <p style={{ margin: '0 0 4px 0', fontSize: 14, fontWeight: 600 }}>Travel Time: {beach.time}</p>}
+                    <p style={{ margin: '0 0 4px 0', fontSize: 14, fontWeight: 600 }}>Crowd: {beach.crowd || crowdPrediction}</p>
+                    <p style={{ margin: '0 0 4px 0', fontSize: 14, fontWeight: 600 }}>Sustainability: {beach.sustainabilityScore || sustainabilityScore}</p>
+                    <p style={{ margin: '0 0 4px 0', fontSize: 14, fontWeight: 600 }}>Alerts: {smartAlerts.length > 0 ? smartAlerts.map((a: any) => a.message).join(', ') : 'None'}</p>
                     <p style={{ margin: '0 0 4px 0', fontSize: 14, fontWeight: 600 }}>Best Time: {getBestTime(weather)}</p>
                     <p style={{ margin: '0 0 4px 0', fontSize: 14, fontWeight: 600 }}>Best Months: {getBestMonths(beach.state)}</p>
-                    <p style={{ margin: '0 0 4px 0', fontSize: 14, fontWeight: 600 }}>Sustainability Score: {sustainabilityScore} 🌱</p>
-                    <p style={{ margin: 0, fontSize: 14, fontWeight: 600, textTransform: 'capitalize' }}>Crowd Level: {crowdPrediction}</p>
                   </div>
                 </div>
               </div>
