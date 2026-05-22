@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AlertTriangle, Info, Sun, Bell } from 'lucide-react';
 import beachesJson from '../data/beaches.json';
-import Loader from '../components/Loader';
+import PremiumLoader from '../components/PremiumLoader';
 
 export const generateAlerts = (beach: any) => {
   const alerts = [];
@@ -58,7 +58,7 @@ export default function Alerts() {
   };
 
   if (loading) {
-    return <Loader />;
+    return <PremiumLoader />;
   }
 
   return (

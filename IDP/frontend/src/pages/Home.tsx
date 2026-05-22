@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet'
 import L from 'leaflet';
 
 import beachesJson from '../data/beaches.json';
-import Loader from '../components/Loader';
+import PremiumLoader from '../components/PremiumLoader';
 
 const stateColors: Record<string, string> = {
   "Goa": "#e74c3c",
@@ -86,7 +86,7 @@ export default function Home() {
 
 
   if (loading) {
-    return <Loader />;
+    return <PremiumLoader />;
   }
 
   const statesList = ['All', ...new Set(beaches.map((b: any) => b.state))];

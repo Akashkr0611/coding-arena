@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import { MapPin, Thermometer, Waves, Sun, Users, ArrowRight, Star } from 'lucide-react';
 import beaches from '../data/beaches.json';
-import Loader from '../components/Loader';
+import PremiumLoader from '../components/PremiumLoader';
 
 export default function Recommendations() {
 
@@ -143,7 +143,7 @@ export default function Recommendations() {
   }, [beaches]);
 
   if (loading) {
-    return <Loader />;
+    return <PremiumLoader />;
   }
 
   const getCrowdBadge     = (c: string) => c === 'Low' ? 'badge-safe' : c === 'Moderate' ? 'badge-mod' : 'badge-danger';

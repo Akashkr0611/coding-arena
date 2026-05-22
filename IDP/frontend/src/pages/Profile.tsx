@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Shield, Image as ImageIcon, VolumeX, Waves, Save } from 'lucide-react';
 import apiClient from '../api/client';
-import Loader from '../components/Loader';
+import PremiumLoader from '../components/PremiumLoader';
 
 const prefItems = [
   {
@@ -66,7 +66,7 @@ export default function Profile() {
   };
 
   if (loading) {
-    return <Loader />;
+    return <PremiumLoader />;
   }
 
   const selectedCount = Object.values(preferences).filter(Boolean).length;
