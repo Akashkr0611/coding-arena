@@ -176,7 +176,7 @@ Always be specific. Never give vague answers.`;
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         
         const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("API Timeout")), 10000)
+            setTimeout(() => reject(new Error("API Timeout")), 30000)
         );
 
         // Build contents payload with conversation history

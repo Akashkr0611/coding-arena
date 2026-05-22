@@ -66,6 +66,7 @@ export default function Chatbot() {
       });
 
       const data = await res.json();
+      console.log("FULL RESPONSE:", data.reply);
       const formattedResponse = formatSmart(cleanResponse(data.reply));
       setMessages(prev => [...prev, { role: 'bot', text: formattedResponse }]);
     } catch (error) {
