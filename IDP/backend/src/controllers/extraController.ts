@@ -170,7 +170,10 @@ Instructions:
 - If tips -> give practical travel advice
 - If safety -> analyze conditions
 
-Answer in 3-5 clear bullet points.
+Answer in at least 5-6 clear bullet points.
+Do NOT stop early.
+Do NOT give short answers.
+Explain fully.
 Always be specific. Never give vague answers.`;
         
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
@@ -209,7 +212,11 @@ Always be specific. Never give vague answers.`;
           return txt.replace(/\*\*/g, "").replace(/\*/g, "").replace(/__/g, "").trim();
         };
         let text = cleanResponse(response.text());
+        console.log("CHATBOT RAW RESPONSE:", text);
 
+        if (text.length < 100) {
+            text += "\nThis beach is also known for its peaceful atmosphere, scenic beauty, and is suitable for tourists looking for relaxation.";
+        }
 
         if (text.includes("I don't have information") || text.includes("I don’t have information")) {
             text = "Here’s what I can suggest based on available data...";
