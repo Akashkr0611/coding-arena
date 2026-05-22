@@ -124,7 +124,6 @@ export default function TripPlanner() {
 
   const fetchRoute = async (user: any, beach: any) => {
     try {
-      console.log("Calling route API for:", beach.name);
       const res = await fetch("https://api.openrouteservice.org/v2/directions/driving-car", {
         method: "POST",
         headers: {
@@ -139,7 +138,6 @@ export default function TripPlanner() {
         })
       });
       const data = await res.json();
-      console.log("Route response:", data);
       
       const route = data.routes?.[0]?.summary;
       if (!route) {
@@ -241,10 +239,7 @@ const getBaseName = (name: string) => {
       
       const closestBeaches = uniqueSorted;
       
-      console.log("Top 5 closest debug:", closestBeaches.map(b => ({
-        name: b.name,
-        base: getBaseName(b.name)
-      })));
+
 
       const routesPromises = closestBeaches.map(async (beach: any) => {
         const routeData = await fetchRoute({ lat: lat1, lon: lon1 }, beach);

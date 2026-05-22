@@ -24,7 +24,6 @@ export const syncBeachData = async (beachId: number): Promise<SuitabilityInputs>
 
     // Rate-limit / caching layer
     if (cache.has(cacheKey)) {
-        console.log(`[Cache Hit] Returning cached external data for beach ${beachId}`);
         return cache.get(cacheKey) as SuitabilityInputs;
     }
 
@@ -46,7 +45,6 @@ export const syncBeachData = async (beachId: number): Promise<SuitabilityInputs>
             wind = weatherRes.data.wind.speed * 3.6; // m/s → km/h
             uv = Math.floor(Math.random() * 10);     // UV not in free endpoint
         } else {
-            console.log('No OpenWeather API key — using intelligent mock logic.');
             temp = 25 + Math.random() * 10;
             wind = 5 + Math.random() * 15;
             uv = Math.floor(Math.random() * 11);

@@ -26,10 +26,8 @@ export default function BeachDetail() {
   // Phase 4 Smart Assistant State
   const [smartAlerts, setSmartAlerts] = useState<any[]>([]);
   const [sustainabilityScore, setSustainabilityScore] = useState<number | null>(null);
-  const [rankedBeaches, setRankedBeaches] = useState<any[]>([]);
-  const [recommendedBeach, setRecommendedBeach] = useState<any>(null);
   const [crowdPrediction, setCrowdPrediction] = useState<string>('');
-  const [bestTimeToVisit, setBestTimeToVisit] = useState<string>('');
+
 
   const getBestTime = (weatherObj: any) => {
     if (!weatherObj) return "Not available";
@@ -63,8 +61,6 @@ export default function BeachDetail() {
     const lat = Number(beach.lat || beach.latitude);
     const lng = Number(beach.lon || beach.lng || beach.longitude);
 
-    console.log("Selected beach:", beach);
-    console.log("Coordinates used:", lat, lng);
 
     const fetchImages = async () => {
       const queries = [
@@ -295,7 +291,6 @@ out center;`;
     // 7. BEST TIME TO VISIT
     const calculateBestTime = () => {
       const bestTime = getBestTime(weather);
-      setBestTimeToVisit(bestTime);
       beach.bestTime = bestTime;
     };
 
@@ -307,40 +302,16 @@ out center;`;
       })).sort((a: any, b: any) => b.overallScore - a.overallScore);
       
       if (dummyRanked.length > 0) dummyRanked[0].isBestChoice = true;
-      setRankedBeaches(dummyRanked);
-      return dummyRanked;
-    };
 
-    // 4. BEACH RECOMMENDATION ENGINE
-    const generateRecommendation = (ranked: any[], alertsList: any[]) => {
-      const safeBeaches = ranked.filter((b: any) => b.id === beach.id ? !alertsList.some(a => a.severity === "High") : true);
-      const top = safeBeaches[0] || ranked[0];
-      setRecommendedBeach({
-        name: top.name,
-        reason: [
-          "Low crowd",
-          "Good weather",
-          "Safe conditions",
-          "High sustainability"
-        ]
-      });
+      return dummyRanked;
     };
 
     const generatedAlerts = calculateAlerts();
     const crowdLvl = determineCrowd();
     calculateBestTime();
     const score = calculateSustainability(generatedAlerts, crowdLvl);
-    const ranked = rankBeaches(score);
-    generateRecommendation(ranked, generatedAlerts);
+    rankBeaches(score);
 
-    console.log("Phase 4 Smart Metrics States:", {
-      smartAlerts,
-      sustainabilityScore,
-      rankedBeaches,
-      recommendedBeach,
-      crowdPrediction,
-      bestTimeToVisit
-    });
 
   }, [weather, beach, hotels]);
 

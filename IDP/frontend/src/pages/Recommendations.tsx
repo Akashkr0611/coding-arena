@@ -5,7 +5,7 @@ import { MapPin, Thermometer, Waves, Sun, Users, ArrowRight, Star } from 'lucide
 import beaches from '../data/beaches.json';
 
 export default function Recommendations() {
-  const [recommended, setRecommended] = useState<any[]>([]);
+
   const [localBeaches, setBeaches] = useState<any[]>(beaches);
   const [recommendedBeach, setRecommendedBeach] = useState<any>(null);
   const [preferences, setPreferences] = useState({
@@ -24,8 +24,6 @@ export default function Recommendations() {
     }));
   };
 
-  console.log("Fetched recommendations:", recommended);
-  console.log("Preferences:", preferences);
 
   const scoreBeachForUser = (b: any, prefs: typeof preferences) => {
     let score = 0;
@@ -76,11 +74,6 @@ export default function Recommendations() {
       .slice(0, 5);
   }
 
-  console.log(
-    "Filtered beaches (scored):",
-    recommendedForUser.map(b => ({ name: b.name, score: b.userScore }))
-  );
-
   const getCrowd = () => {
     const day = new Date().getDay();
     if (day === 0 || day === 6) return "high";
@@ -116,7 +109,7 @@ export default function Recommendations() {
 
   useEffect(() => {
     apiClient.get('/recommendations/1')
-      .then(res => { setRecommended(res.data); setLoading(false); })
+      .then(() => { setLoading(false); })
       .catch(err => { console.error('Failed to fetch recommendations:', err); setLoading(false); });
   }, []);
 

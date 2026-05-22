@@ -90,29 +90,14 @@ export default function Chatbot() {
 
           {/* Messages */}
           <div className="chatbot-messages">
-            {messages.map((msg, i) => {
-              const isLong = msg.role === 'bot' && msg.text.length > 300;
-              return (
-                <div
-                  key={i}
-                  className={msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-bot'}
-                >
-                  {isLong ? (
-                    <>
-                      {msg.text.substring(0, 300)}...
-                      <div
-                        style={{ marginTop: '6px', fontSize: '12px', color: 'var(--teal)', cursor: 'pointer', fontWeight: 600 }}
-                        onClick={(e) => {
-                          (e.currentTarget.parentElement as HTMLElement).innerHTML = msg.text;
-                        }}
-                      >
-                        Read more ↓
-                      </div>
-                    </>
-                  ) : msg.text}
-                </div>
-              );
-            })}
+            {messages.map((msg, i) => (
+              <div
+                key={i}
+                className={`chat-message ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-bot'}`}
+              >
+                {msg.text}
+              </div>
+            ))}
 
             {loading && (
               <div className="chat-typing">

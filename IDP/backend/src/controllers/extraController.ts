@@ -14,7 +14,6 @@ export const getWeather = async (req: Request, res: Response) => {
         const apiKey = '40c00170642d361d99156dacec66cf9c';
         const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
         
-        console.log("Weather request:", lat, lon);
         const response = await axios.get(url);
         const data = response.data;
         
@@ -112,7 +111,6 @@ export const getRoute = async (req: Request, res: Response) => {
             }
         );
         
-        console.log("Route API response:", response.data);
 
         if (!response.data.routes || response.data.routes.length === 0) {
             console.warn("Route API failed, fallback to Haversine");
@@ -146,10 +144,8 @@ export const getLiveData = async (req: Request, res: Response) => {
 export const chat = async (req: Request, res: Response) => {
     try {
         const { message, beachContext, history } = req.body;
-        console.log("Incoming message:", message);
         
         if (!process.env.GEMINI_API_KEY) {
-            console.log("No API Key found in process.env");
             return res.json({ reply: "Hi there! I'm your CoastWise beach assistant. (Note: Gemini API key is missing. Please add it to .env to enable full AI responses.)" });
         }
 
@@ -214,7 +210,6 @@ Always be specific. Never give vague answers.`;
         };
         let text = cleanResponse(response.text());
 
-        console.log("Gemini response:", text);
 
         if (text.includes("I don't have information") || text.includes("I don’t have information")) {
             text = "Here’s what I can suggest based on available data...";

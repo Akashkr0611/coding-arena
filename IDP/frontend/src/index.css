@@ -673,6 +673,7 @@ body {
 
 .chatbot-messages {
   flex: 1;
+  max-height: 60vh;
   overflow-y: auto;
   padding: 16px;
   display: flex;
@@ -685,6 +686,12 @@ body {
 .chatbot-messages::-webkit-scrollbar-track { background: transparent; }
 .chatbot-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
+.chat-message {
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
 .chat-bubble-bot {
   align-self: flex-start;
   background: var(--card-bg);
@@ -696,7 +703,6 @@ body {
   line-height: 1.55;
   max-width: 82%;
   box-shadow: var(--shadow-sm);
-  white-space: pre-wrap;
 }
 
 .chat-bubble-user {
@@ -708,7 +714,6 @@ body {
   font-size: 13px;
   line-height: 1.55;
   max-width: 82%;
-  white-space: pre-wrap;
 }
 
 .chat-typing {
