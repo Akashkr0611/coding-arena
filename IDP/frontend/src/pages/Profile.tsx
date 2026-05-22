@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Shield, Image as ImageIcon, VolumeX, Waves, Save } from 'lucide-react';
 import apiClient from '../api/client';
+import Loader from '../components/Loader';
 
 const prefItems = [
   {
@@ -65,12 +66,7 @@ export default function Profile() {
   };
 
   if (loading) {
-    return (
-      <div className="loading" style={{ paddingTop: 80 }}>
-        <div className="loading-spinner" />
-        Loading Profile...
-      </div>
-    );
+    return <Loader />;
   }
 
   const selectedCount = Object.values(preferences).filter(Boolean).length;

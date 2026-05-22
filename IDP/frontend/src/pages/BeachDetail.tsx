@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Cloud, MapPin, Camera, Activity, Building, HeartPulse } from 'lucide-react';
 import beachesJson from '../data/beaches.json';
+import Loader from '../components/Loader';
 import { generateAlerts } from './Alerts';
 
 const UNSPLASH_API_KEY = "up8OQ9nV2nmmkUI2Fo96O9r2yMDeG5-6y76q4CA6NUw";
@@ -316,12 +317,7 @@ out center;`;
   }, [weather, beach, hotels]);
 
   if (!beach || loading) {
-    return (
-      <div className="loading" style={{ paddingTop: 80, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div className="loading-spinner" style={{ marginBottom: 16 }} />
-        <p style={{ color: 'var(--text-secondary)' }}>Loading live data for this beach...</p>
-      </div>
-    );
+    return <Loader />;
   }
 
   return (

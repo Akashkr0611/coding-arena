@@ -154,8 +154,10 @@ export default function Dashboard() {
     <div className="page-wrapper">
       {/* Header */}
       <div style={{ marginBottom: '28px' }}>
-        <h1 className="header-title">Dashboard Overview</h1>
-        <p className="header-subtitle">Real-time beach intelligence across India's coastline</p>
+        <h1 className="header-title">CoastWise</h1>
+        <p className="tagline">
+          AI-powered coastal decision system for choosing the best beach based on real-time conditions
+        </p>
       </div>
 
       {/* Stat Cards */}

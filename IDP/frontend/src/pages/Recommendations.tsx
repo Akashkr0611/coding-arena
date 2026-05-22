@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import { MapPin, Thermometer, Waves, Sun, Users, ArrowRight, Star } from 'lucide-react';
 import beaches from '../data/beaches.json';
+import Loader from '../components/Loader';
 
 export default function Recommendations() {
 
@@ -142,12 +143,7 @@ export default function Recommendations() {
   }, [beaches]);
 
   if (loading) {
-    return (
-      <div className="loading" style={{ paddingTop: 80 }}>
-        <div className="loading-spinner" />
-        Loading curated beaches...
-      </div>
-    );
+    return <Loader />;
   }
 
   const getCrowdBadge     = (c: string) => c === 'Low' ? 'badge-safe' : c === 'Moderate' ? 'badge-mod' : 'badge-danger';

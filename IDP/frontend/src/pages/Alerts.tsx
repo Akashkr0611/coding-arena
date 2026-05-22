@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AlertTriangle, Info, Sun, Bell } from 'lucide-react';
 import beachesJson from '../data/beaches.json';
+import Loader from '../components/Loader';
 
 export const generateAlerts = (beach: any) => {
   const alerts = [];
@@ -57,12 +58,7 @@ export default function Alerts() {
   };
 
   if (loading) {
-    return (
-      <div className="loading" style={{ paddingTop: 80 }}>
-        <div className="loading-spinner" />
-        Loading alerts...
-      </div>
-    );
+    return <Loader />;
   }
 
   return (
