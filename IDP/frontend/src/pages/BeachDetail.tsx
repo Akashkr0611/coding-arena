@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Cloud, MapPin, Camera, Activity, Building, HeartPulse } from 'lucide-react';
 import beachesJson from '../data/beaches.json';
-import BeachDetailsLoader from '../components/BeachDetailsLoader';
+import MapPulseLoader from '../components/MapPulseLoader';
 import { generateAlerts } from './Alerts';
 
 const UNSPLASH_API_KEY = "up8OQ9nV2nmmkUI2Fo96O9r2yMDeG5-6y76q4CA6NUw";
@@ -317,7 +317,7 @@ out center;`;
   }, [weather, beach, hotels]);
 
   if (!beach || loading) {
-    return <BeachDetailsLoader />;
+    return <MapPulseLoader />;
   }
 
   return (
