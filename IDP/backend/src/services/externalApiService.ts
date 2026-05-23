@@ -56,7 +56,7 @@ export const syncBeachData = async (beachId: number): Promise<SuitabilityInputs>
     // 2. Fetch real-time tide data (mocked / placeholder for WorldTides / StormGlass)
     try {
         waveHeight = 0.5 + Math.random() * 2.5;
-        tideLevel  = waveHeight * 0.4;
+        tideLevel = waveHeight * 0.4;
     } catch (error: any) {
         console.error('Tide API Error:', error.message);
     }
@@ -71,9 +71,9 @@ export const syncBeachData = async (beachId: number): Promise<SuitabilityInputs>
 
     const inputs: SuitabilityInputs = {
         weather: { temperature: temp, wind_speed: wind, uv_index: uv },
-        tide:    { wave_height: waveHeight },
-        safety:  { rip_current_risk: ripCurrentRisk as 'Low' | 'Moderate' | 'High' },
-        crowd:   { level: 'Medium' },
+        tide: { wave_height: waveHeight },
+        safety: { rip_current_risk: ripCurrentRisk as 'Low' | 'Moderate' | 'High' },
+        crowd: { level: 'Medium' },
     };
 
     // 4. Trigger safety alert engine

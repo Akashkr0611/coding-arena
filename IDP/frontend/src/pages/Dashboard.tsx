@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import apiClient from '../api/client';
 import { ShieldAlert, Map, Star, AlertTriangle, TrendingUp } from 'lucide-react';
 import beaches from '../data/beaches.json';
+import { generateAlerts } from './Alerts';
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({ total: beaches.length, alerts: 0 });
+  const [stats, setStats] = useState({ total: beaches.length, alerts: 0, safe: beaches.length });
   const [localBeaches, setBeaches] = useState<any[]>(beaches);
   const [recommendedBeach, setRecommendedBeach] = useState<any>(null);
 
@@ -42,11 +42,9 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    apiClient.get('/alerts/1')
-      .then((aRes) => {
-        setStats({ total: beaches.length, alerts: aRes.data.length });
-      })
-      .catch(console.error);
+    const totalAlertsCount = beaches.reduce((acc, curr) => acc + generateAlerts(curr).length, 0);
+    const safeBeachesCount = beaches.filter(curr => generateAlerts(curr).length === 0).length;
+    setStats({ total: beaches.length, alerts: totalAlertsCount, safe: safeBeachesCount });
   }, []);
 
   useEffect(() => {
@@ -100,7 +98,7 @@ export default function Dashboard() {
     {
       icon: <ShieldAlert size={24} color="var(--safe)" />,
       iconBg: 'rgba(34,197,94,0.1)',
-      value: Math.floor(stats.total * 0.7),
+      value: stats.safe,
       label: 'Safe Beaches',
       suffix: ''
     },

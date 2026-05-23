@@ -5,9 +5,10 @@ import PremiumLoader from '../components/PremiumLoader';
 
 export const generateAlerts = (beach: any) => {
   const alerts = [];
-  const wave = beach.waveHeight || (0.5 + (beach.id % 4) * 0.3);
-  const temp = beach.temp || 28 + (beach.id % 5);
-  const wind = beach.windSpeed || 5 + (beach.id % 3) * 2;
+  // Sparse alerts: trigger alert conditions only on specific beach IDs
+  const wave = beach.waveHeight || (beach.id % 15 === 0 ? 1.8 : 0.8);
+  const temp = beach.temp || (beach.id % 23 === 0 ? 37 : 29);
+  const wind = beach.windSpeed || (beach.id % 19 === 0 ? 12 : 6);
 
   if (wave > 1.5) {
     alerts.push({
