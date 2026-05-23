@@ -205,7 +205,8 @@ out center;`;
                baseWeather.windSpeed = marine.windSpeed?.noaa;
              }
           }
-          baseWeather.tideHeight = (0.8 + (beach.id % 3) * 0.4 + Math.sin(Date.now() / 3600000) * 0.3).toFixed(2);
+          const tideBase = beach.id % 17 === 0 ? 1.6 : 0.8;
+          baseWeather.tideHeight = (tideBase + Math.sin(Date.now() / 3600000) * 0.2).toFixed(2);
           setWeather(baseWeather);
         })
         .catch(() => setWeather({}));
