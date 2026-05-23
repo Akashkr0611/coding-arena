@@ -61,7 +61,7 @@ score = (weatherScore * 0.3) +
   - **High Tides (>1.5m)**: Generated dynamically per time-dependent sine-wave + beach ID offsets (Dangerously high tides, avoid shorelines recommendation).
   - **High Waves (>1.3m)**: Triggered dynamically for beach IDs where `id % 15 === 0` (Avoid swimming recommendation).
   - **Heat Alert (>37°C)**: Triggered dynamically for beach IDs where `id % 23 === 0` (Stay hydrated recommendation).
-  - **High Wind (>10km/h)**: Triggered dynamically for beach IDs where `id % 19 === 0` (Be cautious recommendation).
+  - **High Wind (>30km/h)**: Triggered dynamically for beach IDs where `id % 19 === 0` (Be cautious recommendation).
   This distributes active alerts across a highly realistic ~10-15% of all beaches.
 - **Tide Height Integration:** Real-time tide height is computed dynamically per beach using a time-dependent sine wave combined with localized offsets:
   `tideHeight = 0.8 + (id % 3) * 0.4 + sin(currentTime / 3600000) * 0.3`

@@ -8,7 +8,7 @@ export const generateAlerts = (beach: any) => {
   // Sparse alerts: trigger alert conditions only on specific beach IDs
   const wave = beach.waveHeight || (beach.id % 15 === 0 ? 1.8 : 0.8);
   const temp = beach.temp || (beach.id % 23 === 0 ? 38 : 29);
-  const wind = beach.windSpeed || (beach.id % 19 === 0 ? 12 : 6);
+  const wind = beach.windSpeed || (beach.id % 19 === 0 ? 32 : 6);
   const tide = beach.tideHeight || (0.8 + (beach.id % 3) * 0.4 + Math.sin(Date.now() / 3600000) * 0.3);
 
   if (tide > 1.5) {
@@ -32,7 +32,7 @@ export const generateAlerts = (beach: any) => {
       message: "Stay hydrated"
     });
   }
-  if (wind > 10) {
+  if (wind > 30) {
     alerts.push({
       type: "High Wind",
       severity: "Medium",
