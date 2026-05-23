@@ -233,7 +233,15 @@ out center;`;
 
     // 1. SMART ALERTS SYSTEM
     const calculateAlerts = () => {
-      const beachAlerts = generateAlerts(beach).map((a: any) => ({
+      // Merge live weather metrics into the beach object for accurate real-time alert evaluation
+      const mergedBeach = {
+        ...beach,
+        waveHeight: weather.waveHeight !== undefined ? weather.waveHeight : beach.waveHeight,
+        temp: weather.temperature !== undefined && weather.temperature !== "--" ? Number(weather.temperature) : beach.temp,
+        windSpeed: weather.windSpeed !== undefined ? weather.windSpeed : beach.windSpeed,
+        tideHeight: weather.tideHeight !== undefined ? Number(weather.tideHeight) : beach.tideHeight,
+      };
+      const beachAlerts = generateAlerts(mergedBeach).map((a: any) => ({
         beachName: beach.name,
         alertType: a.type,
         severity: a.severity,

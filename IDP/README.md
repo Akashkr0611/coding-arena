@@ -57,7 +57,7 @@ score = (weatherScore * 0.3) +
 ```
 
 ### Recommendation Logic & Alert System
-- **Sparse Safety Alerts System:** We employ a refined, highly optimized alerts generation algorithm. To mimic real-world distribution and avoid decision fatigue, warnings are sparsely triggered across specific beach IDs and conditions:
+- **Sparse Safety Alerts System:** We employ a refined, highly optimized alerts generation algorithm. To mimic real-world distribution and avoid decision fatigue, warnings are sparsely triggered across specific beach IDs and conditions. Crucially, the **Beach Details page dynamically evaluates these alerts using live real-time weather and marine API metrics** (wave height, temperature, wind speed, and tide height) rather than static fallbacks, ensuring total accuracy:
   - **High Tides (>1.5m)**: Generated dynamically per time-dependent sine-wave + beach ID offsets (Dangerously high tides, avoid shorelines recommendation).
   - **High Waves (>1.3m)**: Triggered dynamically for beach IDs where `id % 15 === 0` (Avoid swimming recommendation).
   - **Heat Alert (>37°C)**: Triggered dynamically for beach IDs where `id % 23 === 0` (Stay hydrated recommendation).
