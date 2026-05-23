@@ -7,17 +7,25 @@ export const generateAlerts = (beach: any) => {
   const alerts = [];
   // Sparse alerts: trigger alert conditions only on specific beach IDs
   const wave = beach.waveHeight || (beach.id % 15 === 0 ? 1.8 : 0.8);
-  const temp = beach.temp || (beach.id % 23 === 0 ? 37 : 29);
+  const temp = beach.temp || (beach.id % 23 === 0 ? 38 : 29);
   const wind = beach.windSpeed || (beach.id % 19 === 0 ? 12 : 6);
+  const tide = beach.tideHeight || (0.8 + (beach.id % 3) * 0.4 + Math.sin(Date.now() / 3600000) * 0.3);
 
-  if (wave > 1.5) {
+  if (tide > 1.5) {
+    alerts.push({
+      type: "High Tides",
+      severity: "High",
+      message: "Dangerously high tides, avoid shorelines"
+    });
+  }
+  if (wave > 1.3) {
     alerts.push({
       type: "High Waves",
       severity: "High",
       message: "Avoid swimming"
     });
   }
-  if (temp > 35) {
+  if (temp > 37) {
     alerts.push({
       type: "Heat Alert",
       severity: "Medium",
