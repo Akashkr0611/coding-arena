@@ -7,6 +7,7 @@ import { generateAlerts } from './Alerts';
 
 const UNSPLASH_API_KEY = "up8OQ9nV2nmmkUI2Fo96O9r2yMDeG5-6y76q4CA6NUw";
 const STORMGLASS_API_KEY = "92c0a3a8-5450-11f1-bdb4-0242ac120004-92c0a45c-5450-11f1-bdb4-0242ac120004";
+const OPENTRIP_API_KEY = "5ae2e3f221c38a28845f05b6cceed17c64f7e28367b666f2623ba60f";
 
 export default function BeachDetail() {
   const { id } = useParams();
@@ -28,6 +29,7 @@ export default function BeachDetail() {
   const [smartAlerts, setSmartAlerts] = useState<any[]>([]);
   const [sustainabilityScore, setSustainabilityScore] = useState<number | null>(null);
   const [crowdPrediction, setCrowdPrediction] = useState<string>('');
+  const [nearbyPlaces, setNearbyPlaces] = useState<any[]>([]);
 
 
   const getBestTime = (weatherObj: any) => {
@@ -54,6 +56,36 @@ export default function BeachDetail() {
       TamilNadu: "Dec – Mar"
     };
     return map[state] || "Oct – Mar";
+  };
+
+  const fetchNearbyPlaces = async (lat: any, lon: any) => {
+    try {
+      const res = await fetch(
+        `https://api.opentripmap.com/0.1/en/places/radius?radius=50000&lon=${lon}&lat=${lat}&limit=5&apikey=${OPENTRIP_API_KEY}`
+      );
+
+      const data = await res.json();
+
+      console.log("OpenTripMap response:", data);
+
+      if (data.features && data.features.length > 0) {
+        const places = data.features
+          .filter((place: any) => place.properties.name && place.properties.name.trim() !== "")
+          .sort((a: any, b: any) => a.properties.dist - b.properties.dist)
+          .slice(0, 3)
+          .map((place: any) => ({
+            name: place.properties.name,
+            distance: place.properties.dist
+          }));
+
+        setNearbyPlaces(places);
+      } else {
+        setNearbyPlaces([]);
+      }
+    } catch (error) {
+      console.error("Error fetching nearby places:", error);
+      setNearbyPlaces([]);
+    }
   };
 
   useEffect(() => {
@@ -227,6 +259,9 @@ out center;`;
     };
 
     loadData();
+    if (beach?.lat && beach?.lon) {
+      fetchNearbyPlaces(beach.lat, beach.lon);
+    }
   }, [id]);
 
   useEffect(() => {
@@ -534,6 +569,20 @@ out center;`;
             ) : hotels && hotels.length === 0 && hospitals && hospitals.length === 0 ? (
               <p style={{ color: 'var(--text-muted)' }}>Nearby facilities available in closest town</p>
             ) : null}
+          </div>
+
+          <div className="card">
+            <h3>Nearby Tourist Places</h3>
+
+            {nearbyPlaces.length > 0 ? (
+              nearbyPlaces.map((place: any, index: number) => (
+                <p key={index}>
+                  • {place.name} – {(place.distance / 1000).toFixed(1)} km
+                </p>
+              ))
+            ) : (
+              <p>No nearby tourist places found</p>
+            )}
           </div>
 
         </div>

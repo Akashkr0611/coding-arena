@@ -3,13 +3,15 @@
   "version": "1.0.0",
   "description": "CoastWise India - Full Stack Beach Intelligence App",
   "scripts": {
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
     "build": "cd frontend && npm install && npm run build",
     "start": "cd backend && npm install && npm run build && npm start",
-    "dev:backend": "cd backend && npm run dev",
-    "dev:frontend": "cd frontend && npm run dev",
     "postinstall": "cd backend && npm install"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "concurrently": "^10.0.3"
   }
 }

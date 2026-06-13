@@ -124,9 +124,9 @@ score = (weatherScore * 0.3) +
 1. **OpenWeather API:**
    - **Purpose:** Fetches real-time environmental data.
    - **Fields Extracted:** Temperature, wind speed, UV index, weather condition flags.
-2. **Foursquare API:**
-   - **Purpose:** Discovers nearby commercial and emergency infrastructure.
-   - **Filtering Logic:** Strictly queries within a 5km-10km radius for categories like `hotel`, `hospital`, and `tourist attraction`.
+2. **OpenTripMap API:**
+   - **Purpose:** Discovers real, localized tourist attractions, historic sites, and points of interest.
+   - **Filtering Logic:** Queries within a 50km radius and strictly filters for valid named locations, automatically sorting by nearest distance.
 3. **OpenRoute API:**
    - **Purpose:** Navigational routing.
    - **Function:** Calculates real-world driving distance and travel times between the user's GPS coordinates and the target beach.
@@ -192,32 +192,21 @@ CoastWise/
 - Node.js (v18+)
 - npm or yarn
 
-### 1. Clone & Install Dependencies
+### 1. Install Dependencies
 ```bash
-# Install backend dependencies
-cd backend
-npm install
-
-# Install frontend dependencies
-cd ../frontend
+# Install dependencies for the root, frontend, and backend
 npm install
 ```
 
 ### 2. Run the Application (Development)
 ```bash
-# Start backend server (runs on port 3000)
-cd backend
-npm run dev
-
-# Start frontend Vite server (runs on port 5173)
-cd ../frontend
+# Start both backend and frontend servers concurrently using a single command
 npm run dev
 ```
+*The Vite frontend will start on `http://localhost:5173` and the Express backend will start on `http://localhost:5000`.*
 
 ### 3. Production Build
 ```bash
-# Build frontend
-cd frontend
 npm run build
 ```
 
@@ -225,20 +214,19 @@ npm run build
 
 ## 🔐 ENVIRONMENT VARIABLES
 
-Create a `.env` file in the `backend` directory:
+Create a `.env` file in the root directory:
 
 ```env
-PORT=3000
+PORT=5000
 GEMINI_API_KEY=your_google_gemini_key
 OPENWEATHER_API_KEY=your_openweather_key
-FOURSQUARE_API_KEY=your_foursquare_key
 OPENROUTE_API_KEY=your_openroute_key
 ```
 
 Create a `.env` file in the `frontend` directory:
 
 ```env
-VITE_API_URL=http://localhost:3000/api
+VITE_API_URL=/api
 ```
 
 ---

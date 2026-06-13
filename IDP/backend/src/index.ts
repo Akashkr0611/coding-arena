@@ -14,27 +14,9 @@ import { sequelize } from './db';
 import './models'; // Import models to register them with Sequelize
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
-// ─── CORS ────────────────────────────────────────────────────────────────────
-// In production the frontend is served from the SAME origin, so CORS is only
-// needed when running the Vite dev server (localhost:5173) separately.
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  process.env.FRONTEND_URL,
-].filter(Boolean) as string[];
-
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.some(o => origin.startsWith(o)) || origin.includes('vercel.app')) {
-      callback(null, true);
-    } else {
-      callback(null, true); // Permissive during development; tighten for prod
-    }
-  },
-  credentials: true,
-}));
+app.use(cors());
 
 app.use(express.json());
 
