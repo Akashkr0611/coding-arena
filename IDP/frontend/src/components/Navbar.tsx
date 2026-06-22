@@ -7,7 +7,6 @@ const navLinks = [
   { to: '/recommendations',icon: <Star size={18} />,            label: 'For You' },
   { to: '/trip-planner',   icon: <RouteIcon size={18} />,       label: 'Trip Planner' },
   { to: '/alerts',         icon: <AlertTriangle size={18} />,   label: 'Alerts' },
-  { to: '/profile',        icon: <User size={18} />,            label: 'Preferences' },
 ];
 
 export default function Sidebar() {

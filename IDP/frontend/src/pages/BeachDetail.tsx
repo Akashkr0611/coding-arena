@@ -8,6 +8,26 @@ import { generateAlerts } from './Alerts';
 const UNSPLASH_API_KEY = "up8OQ9nV2nmmkUI2Fo96O9r2yMDeG5-6y76q4CA6NUw";
 const STORMGLASS_API_KEY = "92c0a3a8-5450-11f1-bdb4-0242ac120004-92c0a45c-5450-11f1-bdb4-0242ac120004";
 const OPENTRIP_API_KEY = "5ae2e3f221c38a28845f05b6cceed17c64f7e28367b666f2623ba60f";
+const FOURSQUARE_API_KEY = "3WKLNWFM324BDAS4LRD2RNY5BBUJX0MNL3ZSBFAHBHQ3OTAE";
+const GEOAPIFY_API_KEY = "0d4aa5b58c9b4719929bdea1685beb30";
+
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const R = 6371; // Earth's radius in km
+
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+};
 
 export default function BeachDetail() {
   const { id } = useParams();
@@ -21,8 +41,9 @@ export default function BeachDetail() {
   
   const [images, setImages] = useState<any[] | null>(null);
   const [activities, setActivities] = useState<any[] | null>(null);
-  const [hotels, setHotels] = useState<any[] | null>(null);
-  const [hospitals, setHospitals] = useState<any[] | null>(null);
+  const [hotels, setHotels] = useState<any[]>([]);
+  const [hospitals, setHospitals] = useState<any[]>([]);
+  const [loadingNearby, setLoadingNearby] = useState(true);
   const [weather, setWeather] = useState<any>(null);
 
   // Phase 4 Smart Assistant State
@@ -128,66 +149,40 @@ export default function BeachDetail() {
       return data;
     };
 
-    const fetchOverpass = async (query: string) => {
+    const fetchGeoapifyPlaces = async (latParam: any, lonParam: any, category: string) => {
       try {
-        const res = await fetch("https://overpass-api.de/api/interpreter", {
-          method: "POST",
-          body: query
-        });
-        if (!res.ok) return [];
+        const url = `https://api.geoapify.com/v2/places?categories=${category}&filter=circle:${lonParam},${latParam},50000&limit=5&apiKey=${GEOAPIFY_API_KEY}`;
+
+        const res = await fetch(url);
         const data = await res.json();
-        if (!data.elements) return [];
-        return data.elements.map((item: any) => ({
-          name: item.tags?.name || "Unknown"
-        })).filter((item: any) => item.name !== "Unknown").slice(0, 5);
-      } catch (err) {
-        console.error("Overpass API error:", err);
+
+        if (!data.features || data.features.length === 0) return [];
+
+        return data.features
+          .slice(0, 3)
+          .map((place: any) => {
+            const coords = place.geometry?.coordinates;
+            let distance = null;
+
+            if (coords && coords.length === 2) {
+              distance = calculateDistance(
+                latParam,
+                lonParam,
+                coords[1], // place latitude
+                coords[0]  // place longitude
+              );
+            }
+
+            return {
+              name: place.properties.name || "Unnamed place",
+              distance: distance
+            };
+          });
+
+      } catch (error) {
+        console.error("Geoapify error:", error);
         return [];
       }
-    };
-
-    const fetchHotels = async () => {
-      let hotelQuery = `
-[out:json];
-(
-  node(around:50000, ${lat}, ${lng})["tourism"="hotel"];
-  way(around:50000, ${lat}, ${lng})["tourism"="hotel"];
-);
-out center;`;
-      let res = await fetchOverpass(hotelQuery);
-      if (res.length === 0) {
-         hotelQuery = `
-[out:json];
-(
-  node(around:100000, ${lat}, ${lng})["tourism"="hotel"];
-  way(around:100000, ${lat}, ${lng})["tourism"="hotel"];
-);
-out center;`;
-         res = await fetchOverpass(hotelQuery);
-      }
-      return res;
-    };
-
-    const fetchHospitals = async () => {
-      let hospitalQuery = `
-[out:json];
-(
-  node(around:50000, ${lat}, ${lng})["amenity"="hospital"];
-  way(around:50000, ${lat}, ${lng})["amenity"="hospital"];
-);
-out center;`;
-      let res = await fetchOverpass(hospitalQuery);
-      if (res.length === 0) {
-         hospitalQuery = `
-[out:json];
-(
-  node(around:100000, ${lat}, ${lng})["amenity"="hospital"];
-  way(around:100000, ${lat}, ${lng})["amenity"="hospital"];
-);
-out center;`;
-         res = await fetchOverpass(hospitalQuery);
-      }
-      return res;
     };
 
     const fetchWeather = async () => {
@@ -204,13 +199,26 @@ out center;`;
         .then(imgs => setImages(imgs.results || []))
         .catch(() => setImages([]));
 
-      const pHotels = fetchHotels()
-        .then(htls => setHotels(htls || []))
-        .catch(() => setHotels([]));
+      const fetchNearbyData = async () => {
+        setLoadingNearby(true);
 
-      const pHospitals = fetchHospitals()
-        .then(hsps => setHospitals(hsps || []))
-        .catch(() => setHospitals([]));
+        try {
+          const [hotelsData, hospitalsData] = await Promise.all([
+            fetchGeoapifyPlaces(lat, lng, "accommodation.hotel"),
+            fetchGeoapifyPlaces(lat, lng, "healthcare.hospital")
+          ]);
+
+          setHotels(hotelsData);
+          setHospitals(hospitalsData);
+
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setLoadingNearby(false);
+        }
+      };
+
+      const pNearby = fetchNearbyData();
 
       const pWeather = Promise.all([fetchMarineData(), fetchWeather().catch(() => null)])
         .then(([marineRaw, wRes]) => {
@@ -253,16 +261,16 @@ out center;`;
       const staticActivities = activitiesByState[beach.state] || ["Relaxing", "Photography", "Walking"];
       setTimeout(() => { setActivities(staticActivities.map((name: string) => ({ name }))); }, 400);
 
-      Promise.allSettled([pImages, pHotels, pHospitals, pWeather]).finally(() => {
+      Promise.allSettled([pImages, pNearby, pWeather]).finally(() => {
         setLoading(false);
       });
     };
 
-    loadData();
     if (beach?.lat && beach?.lon) {
+      loadData();
       fetchNearbyPlaces(beach.lat, beach.lon);
     }
-  }, [id]);
+  }, [beach?.id]);
 
   useEffect(() => {
     if (!beach || !weather) return;
@@ -390,12 +398,6 @@ out center;`;
               </span>
             ))
           )}
-          <span className="badge" style={{ background: 'rgba(14,165,233,0.1)', color: '#0ea5e9', border: '1px solid rgba(14,165,233,0.2)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <Waves size={12} /> {(weather?.waveHeight !== undefined ? weather.waveHeight : (beach.waveHeight !== undefined ? beach.waveHeight : 1.2))}m Waves
-          </span>
-          <span className="badge" style={{ background: 'rgba(139,92,246,0.1)', color: '#8b5cf6', border: '1px solid rgba(139,92,246,0.2)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            🌊 {(weather?.tideHeight !== undefined ? weather.tideHeight : (0.8 + (beach.id % 3) * 0.4).toFixed(1))}m Tides
-          </span>
         </div>
       </div>
 
@@ -530,22 +532,17 @@ out center;`;
             <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, marginBottom: 16 }}>
               <Building size={18} color="var(--teal)" /> Nearby Hotels
             </h3>
-            {hotels === null ? (
-              <div className="skeleton card"></div>
+            {loadingNearby ? (
+              <p style={{ color: 'var(--text-muted)' }}>Loading nearby places...</p>
             ) : hotels.length > 0 ? (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {hotels.map((hotel: any, idx: number) => (
-                  <li key={idx} style={{ fontSize: 14, display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontWeight: 500 }}>{hotel.name}</span>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
-                      {hotel.distance ? `${(hotel.distance / 1000).toFixed(1)} km` : ''}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : hotels && hotels.length === 0 && hospitals && hospitals.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)' }}>Nearby facilities available in closest town</p>
-            ) : null}
+              hotels.map((hotel: any, index: number) => (
+                <p key={index} style={{ margin: '0 0 8px 0' }}>
+                  • {hotel.name} {hotel.distance !== null ? `– ${hotel.distance.toFixed(1)} km` : ''}
+                </p>
+              ))
+            ) : (
+              <p style={{ color: 'var(--text-muted)' }}>No nearby places found</p>
+            )}
           </div>
 
           {/* Hospitals */}
@@ -553,22 +550,17 @@ out center;`;
             <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, marginBottom: 16 }}>
               <HeartPulse size={18} color="#EF4444" /> Nearby Hospitals
             </h3>
-            {hospitals === null ? (
-              <div className="skeleton card"></div>
+            {loadingNearby ? (
+              <p style={{ color: 'var(--text-muted)' }}>Loading nearby places...</p>
             ) : hospitals.length > 0 ? (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {hospitals.map((hosp: any, idx: number) => (
-                  <li key={idx} style={{ fontSize: 14, display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontWeight: 500 }}>{hosp.name}</span>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
-                      {hosp.distance ? `${(hosp.distance / 1000).toFixed(1)} km` : ''}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : hotels && hotels.length === 0 && hospitals && hospitals.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)' }}>Nearby facilities available in closest town</p>
-            ) : null}
+              hospitals.map((hosp: any, index: number) => (
+                <p key={index} style={{ margin: '0 0 8px 0' }}>
+                  • {hosp.name} {hosp.distance !== null ? `– ${hosp.distance.toFixed(1)} km` : ''}
+                </p>
+              ))
+            ) : (
+              <p style={{ color: 'var(--text-muted)' }}>No nearby places found</p>
+            )}
           </div>
 
           <div className="card">

@@ -4,7 +4,6 @@ import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Recommendations from './pages/Recommendations';
 import Alerts from './pages/Alerts';
-import Profile from './pages/Profile';
 import BeachDetail from './pages/BeachDetail';
 import TripPlanner from './pages/TripPlanner';
 import Chatbot from './components/Chatbot';
@@ -21,7 +20,6 @@ function App() {
             <Route path="/beach/:id" element={<BeachDetail />} />
             <Route path="/recommendations" element={<Recommendations />} />
             <Route path="/alerts" element={<Alerts />} />
-            <Route path="/profile" element={<Profile />} />
             <Route path="/trip-planner" element={<TripPlanner />} />
           </Routes>
         </div>

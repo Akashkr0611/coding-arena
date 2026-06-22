@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import apiClient from '../api/client';
 import { MapPin, Thermometer, Waves, Sun, Users, ArrowRight, Star } from 'lucide-react';
 import beaches from '../data/beaches.json';
 import PremiumLoader from '../components/PremiumLoader';
@@ -9,71 +8,12 @@ export default function Recommendations() {
 
   const [localBeaches, setBeaches] = useState<any[]>(beaches);
   const [recommendedBeach, setRecommendedBeach] = useState<any>(null);
-  const [preferences, setPreferences] = useState({
-    safe: true,
-    scenic: true,
-    quiet: false,
-    adventure: false
-  });
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const togglePreference = (key: keyof typeof preferences) => {
-    setPreferences(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
-
-
-  const scoreBeachForUser = (b: any, prefs: typeof preferences) => {
-    let score = 0;
-
-    // SAFE
-    if (prefs.safe) {
-      if (!b.alerts || b.alerts.length === 0) score += 30;
-      else score -= 10;
-    }
-
-    // SCENIC
-    if (prefs.scenic) {
-      score += (b.sustainabilityScore || 50) * 0.3;
-    }
-
-    // QUIET
-    if (prefs.quiet) {
-      if (b.crowd === "low") score += 25;
-      else if (b.crowd === "moderate") score += 10;
-    }
-
-    // ADVENTURE
-    if (prefs.adventure) {
-      if (b.waveHeight >= 1.5) score += 25;
-      else if (b.waveHeight >= 1) score += 10;
-    }
-
-    return score;
-  };
-
-  let recommendedForUser = [...localBeaches]
-    .map(b => ({
-      ...b,
-      userScore: scoreBeachForUser(b, preferences)
-    }))
-    .sort((a, b) => b.userScore - a.userScore)
+  const recommendedForUser = [...localBeaches]
+    .sort((a, b) => b.sustainabilityScore - a.sustainabilityScore)
     .slice(0, 5);
-
-  const noPreference =
-    !preferences.safe &&
-    !preferences.scenic &&
-    !preferences.quiet &&
-    !preferences.adventure;
-
-  if (noPreference) {
-    recommendedForUser = [...localBeaches]
-      .sort((a, b) => b.sustainabilityScore - a.sustainabilityScore)
-      .slice(0, 5);
-  }
 
   const getCrowd = () => {
     const day = new Date().getDay();
@@ -109,9 +49,7 @@ export default function Recommendations() {
   };
 
   useEffect(() => {
-    apiClient.get('/recommendations/1')
-      .then(() => { setLoading(false); })
-      .catch(err => { console.error('Failed to fetch recommendations:', err); setLoading(false); });
+    setTimeout(() => setLoading(false), 500);
   }, []);
 
   useEffect(() => {
@@ -154,29 +92,7 @@ export default function Recommendations() {
       <div style={{ marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 className="header-title">Curated For You</h1>
-          <p className="header-subtitle">Intelligently matched based on real-time safety, weather, and your preferences.</p>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {(['safe', 'scenic', 'quiet', 'adventure'] as const).map(key => (
-            <button
-              key={key}
-              onClick={() => togglePreference(key)}
-              style={{
-                padding: '6px 12px',
-                borderRadius: '20px',
-                border: `1px solid ${preferences[key] ? 'var(--teal)' : 'var(--border)'}`,
-                background: preferences[key] ? 'rgba(0, 212, 255, 0.1)' : 'var(--card-bg)',
-                color: preferences[key] ? 'var(--teal)' : 'var(--text-secondary)',
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: 'pointer',
-                textTransform: 'capitalize',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              {key}
-            </button>
-          ))}
+          <p className="header-subtitle">Intelligently matched based on real-time safety, weather, and beach sustainability.</p>
         </div>
       </div>
 
@@ -285,7 +201,7 @@ export default function Recommendations() {
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
                   <span style={{ color: 'var(--aqua-light)', fontSize: 13, fontStyle: 'italic' }}>
-                    Perfect for your preferences
+                    Top Recommendation
                   </span>
                   <ArrowRight size={16} color="var(--aqua-light)" />
                 </div>
@@ -299,7 +215,7 @@ export default function Recommendations() {
       {recommendedForUser.length === 0 && (
         <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
           <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-            No recommendations yet. Update your preferences to get personalized beach suggestions!
+            Loading beach recommendations...
           </p>
         </div>
       )}
