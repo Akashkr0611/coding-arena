@@ -1,14 +1,31 @@
-import { Sliders, Users, Camera, Compass, Shield } from 'lucide-react';
-import { usePreferences } from '../context/PreferencesContext';
+import { useState, useEffect } from 'react';
+import { Sliders, Save } from 'lucide-react';
 
 export default function Preferences() {
-  const { preferences, setPreferences } = usePreferences();
+  const [preferences, setPreferences] = useState({
+    lowCrowd: false,
+    scenic: false,
+    adventure: false,
+    safe: false
+  });
 
-  const handleChange = (field: string) => {
-    setPreferences((prev: any) => ({
+  useEffect(() => {
+    const saved = localStorage.getItem("userPreferences");
+    if (saved) {
+      setPreferences(JSON.parse(saved));
+    }
+  }, []);
+
+  const handleChange = (field: keyof typeof preferences) => {
+    setPreferences(prev => ({
       ...prev,
       [field]: !prev[field]
     }));
+  };
+
+  const handleSave = () => {
+    localStorage.setItem("userPreferences", JSON.stringify(preferences));
+    alert("Preferences saved successfully");
   };
 
   const getButtonStyle = (active: boolean) => ({
@@ -38,22 +55,27 @@ export default function Preferences() {
         <p className="header-subtitle">Customize your perfect beach getaway</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-        <button style={getButtonStyle(preferences.lowCrowd)} onClick={() => handleChange('lowCrowd')}>
-          <Users size={22} color={preferences.lowCrowd ? "var(--teal)" : "var(--text-secondary)"} />
-          Low Crowd
-        </button>
-        <button style={getButtonStyle(preferences.scenic)} onClick={() => handleChange('scenic')}>
-          <Camera size={22} color={preferences.scenic ? "var(--teal)" : "var(--text-secondary)"} />
-          Scenic
-        </button>
-        <button style={getButtonStyle(preferences.adventure)} onClick={() => handleChange('adventure')}>
-          <Compass size={22} color={preferences.adventure ? "var(--teal)" : "var(--text-secondary)"} />
-          Adventure
-        </button>
-        <button style={getButtonStyle(preferences.safe)} onClick={() => handleChange('safe')}>
-          <Shield size={22} color={preferences.safe ? "var(--teal)" : "var(--text-secondary)"} />
-          Safe
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px' }}>
+        <div style={getButtonStyle(preferences.lowCrowd)} onClick={() => handleChange('lowCrowd')} className={preferences.lowCrowd ? "active" : ""}>
+          🧘 Low Crowd
+        </div>
+        <div style={getButtonStyle(preferences.scenic)} onClick={() => handleChange('scenic')} className={preferences.scenic ? "active" : ""}>
+          🌅 Scenic
+        </div>
+        <div style={getButtonStyle(preferences.adventure)} onClick={() => handleChange('adventure')} className={preferences.adventure ? "active" : ""}>
+          🏄 Adventure
+        </div>
+        <div style={getButtonStyle(preferences.safe)} onClick={() => handleChange('safe')} className={preferences.safe ? "active" : ""}>
+          🛟 Safe
+        </div>
+      </div>
+
+      <div style={{ textAlign: 'center' }}>
+        <button 
+          onClick={handleSave}
+          style={{ padding: '16px 32px', borderRadius: '12px', background: 'var(--teal)', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 auto' }}
+        >
+          <Save size={20} /> Save Preferences
         </button>
       </div>
     </div>

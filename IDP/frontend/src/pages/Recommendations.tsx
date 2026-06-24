@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { MapPin, Thermometer, Waves, Sun, Users, ArrowRight, Star } from 'lucide-react';
 import beaches from '../data/beaches.json';
 import PremiumLoader from '../components/PremiumLoader';
-import { usePreferences } from '../context/PreferencesContext';
 
 export default function Recommendations() {
 
@@ -12,23 +11,40 @@ export default function Recommendations() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const { preferences } = usePreferences();
+  let prefs: any = {};
+  try {
+    prefs = JSON.parse(localStorage.getItem("userPreferences") || "{}");
+  } catch(e) {}
 
-  const scoredBeaches = localBeaches.map((beach: any) => {
+  const mapBeachAttributes = (beach: any) => {
+    return {
+      ...beach,
+      isLowCrowd: beach.crowd === "Low" || beach.crowd === "low",
+      isScenic: beach.rating >= 4 || beach.description?.includes("scenic") || beach.sustainabilityScore > 70,
+      isAdventure: beach.activities?.includes("surfing") || beach.activities?.includes("water sports") || beach.waveHeight >= 1.5,
+      isSafe: beach.safetyScore >= 70 || (!beach.alerts || beach.alerts.length === 0)
+    };
+  };
+
+  const enrichedBeaches = localBeaches.map(mapBeachAttributes);
+
+  const scoredBeaches = enrichedBeaches.map((beach: any) => {
     let score = 0;
-    if (preferences.lowCrowd && beach.crowd === "Low") score++;
-    if (preferences.scenic && beach.scenic) score++;
-    if (preferences.adventure && beach.adventure) score++;
-    if (preferences.safe && beach.safe) score++;
+    if (prefs.lowCrowd && beach.isLowCrowd) score++;
+    if (prefs.scenic && beach.isScenic) score++;
+    if (prefs.adventure && beach.isAdventure) score++;
+    if (prefs.safe && beach.isSafe) score++;
     return { ...beach, score };
   });
 
-  const sortedBeaches = [...scoredBeaches]
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 10);
+  const sortedBeaches = [...scoredBeaches].sort((a, b) => b.score - a.score);
 
-  const recommendedForUser = sortedBeaches;
-  const hasPreferences = preferences.lowCrowd || preferences.scenic || preferences.adventure || preferences.safe;
+  const finalBeaches = sortedBeaches.some((b: any) => b.score > 0)
+    ? sortedBeaches.filter((b: any) => b.score > 0).slice(0, 10)
+    : enrichedBeaches.slice(0, 10);
+
+  const recommendedForUser = finalBeaches;
+  const hasPreferences = prefs.lowCrowd || prefs.scenic || prefs.adventure || prefs.safe;
 
   const getCrowd = () => {
     const day = new Date().getDay();
@@ -93,7 +109,7 @@ export default function Recommendations() {
     } else {
       setRecommendedBeach(null);
     }
-  }, [beaches, preferences]);
+  }, [beaches]);
 
   if (loading) {
     return <PremiumLoader />;
