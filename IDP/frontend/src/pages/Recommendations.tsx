@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MapPin, Thermometer, Waves, Sun, Users, ArrowRight, Star } from 'lucide-react';
 import beaches from '../data/beaches.json';
 import PremiumLoader from '../components/PremiumLoader';
+import { usePreferences } from '../context/PreferencesContext';
 
 export default function Recommendations() {
 
@@ -11,15 +12,14 @@ export default function Recommendations() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  let prefs: any = {};
-  try {
-    prefs = JSON.parse(localStorage.getItem("userPreferences") || "{}");
-  } catch(e) {}
+  const { preferences } = usePreferences();
 
   const filteredBeaches = localBeaches.filter((beach: any) => {
     return (
-      (!prefs.state || beach.state === prefs.state) &&
-      (!prefs.crowd || beach.crowd === prefs.crowd)
+      (!preferences.lowCrowd || beach.crowd === "Low") &&
+      (!preferences.scenic || beach.scenic === true) &&
+      (!preferences.adventure || beach.adventure === true) &&
+      (!preferences.safe || beach.safe === true)
     );
   });
 
@@ -74,17 +74,7 @@ export default function Recommendations() {
     });
     setBeaches(updated);
 
-    const prefsStr = localStorage.getItem("userPreferences");
-    const p = prefsStr ? JSON.parse(prefsStr) : {};
-
-    const filtered = updated.filter((beach: any) => {
-      return (
-        (!p.state || beach.state === p.state) &&
-        (!p.crowd || beach.crowd === p.crowd)
-      );
-    });
-
-    const best = filtered.length > 0 ? filtered[0] : updated[0];
+    const best = filteredBeaches.length > 0 ? filteredBeaches[0] : null;
 
     if (best) {
       setRecommendedBeach({
@@ -95,8 +85,10 @@ export default function Recommendations() {
           "Good weather"
         ]
       });
+    } else {
+      setRecommendedBeach(null);
     }
-  }, [beaches]);
+  }, [beaches, preferences]);
 
   if (loading) {
     return <PremiumLoader />;
@@ -230,10 +222,10 @@ export default function Recommendations() {
       </div>
 
       {/* Empty state */}
-      {(!prefs.state && !prefs.crowd && !prefs.travelType && !prefs.bestTime) ? (
+      {(!preferences.lowCrowd && !preferences.scenic && !preferences.adventure && !preferences.safe) ? (
         <div className="card" style={{ textAlign: 'center', padding: '48px 24px', marginTop: 20 }}>
           <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-            No preferences selected. Showing default recommendations.
+            Select preferences to get recommendations
           </p>
         </div>
       ) : recommendedForUser.length === 0 ? (
