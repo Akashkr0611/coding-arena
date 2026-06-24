@@ -59,19 +59,22 @@ export default function Chatbot() {
         content: m.text
       }));
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage, beachContext, history: chatHistory })
+      const res = await fetch("http://localhost:5000/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          history: chatHistory
+        })
       });
 
       const data = await res.json();
-      console.log("FULL RESPONSE:", data.reply);
-      const formattedResponse = formatSmart(cleanResponse(data.reply));
-      setMessages(prev => [...prev, { role: 'bot', text: formattedResponse }]);
+      setMessages(prev => [...prev, { role: 'bot', text: data.reply }]);
     } catch (error) {
       console.error('Chat Frontend Error:', error);
-      setMessages(prev => [...prev, { role: 'bot', text: cleanResponse('Oops! I am having trouble connecting to the server.') }]);
+      setMessages(prev => [...prev, { role: 'bot', text: 'Oops! I am having trouble connecting to the server.' }]);
     } finally {
       setLoading(false);
     }

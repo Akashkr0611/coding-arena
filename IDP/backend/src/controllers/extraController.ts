@@ -143,38 +143,30 @@ export const getLiveData = async (req: Request, res: Response) => {
 
 export const chat = async (req: Request, res: Response) => {
     try {
-        const { message, beachContext, history } = req.body;
+        const { message, history } = req.body;
         
         if (!process.env.GEMINI_API_KEY) {
             return res.json({ reply: "Hi there! I'm your CoastWise beach assistant. (Note: Gemini API key is missing. Please add it to .env to enable full AI responses.)" });
         }
 
-        // Fetch all beaches to prevent hallucination
-        const beaches = await Beach.findAll({ raw: true });
-        
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
         const prompt = `You are an intelligent beach assistant.
 
+Rules:
+- Answer in clear bullet points
+- Do NOT use symbols like **, *, #
+- Give complete answers (no cutting)
+- Be relevant to user question
+- Maintain conversation context
+- Keep answers short but meaningful
+
+Conversation history:
+${JSON.stringify(history)}
+
 User question:
 ${message}
-
-Context:
-Selected beach: ${JSON.stringify(beachContext || {})}
-Available beaches: ${JSON.stringify(beaches || [])}
-
-Instructions:
-- Understand user intent
-- Use ONLY provided beach data
-- If recommendation -> choose best 1-2 beaches
-- If tips -> give practical travel advice
-- If safety -> analyze conditions
-
-Answer in at least 5-6 clear bullet points.
-Do NOT stop early.
-Do NOT give short answers.
-Explain fully.
-Always be specific. Never give vague answers.`;
+`;
         
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         
@@ -182,24 +174,11 @@ Always be specific. Never give vague answers.`;
             setTimeout(() => reject(new Error("API Timeout")), 30000)
         );
 
-        // Build contents payload with conversation history
-        const contents = [];
-        if (history && Array.isArray(history)) {
-            history.forEach(m => {
-                if (m.content) {
-                   contents.push({ role: m.role || 'user', parts: [{ text: m.content }] });
-                }
-            });
-        }
-        contents.push({ role: 'user', parts: [{ text: prompt }] });
-
-        if (message.toLowerCase().includes("best beach")) {
-            const best = beaches.length > 0 ? beaches[0] : { name: "Radhanagar Beach" };
-            return res.json({ reply: `Based on current ratings, ${best.name} is a top recommendation!` });
-        }
-
         let apiPromise = model.generateContent({
-            contents: contents,
+            contents: [{
+                role: "user",
+                parts: [{ text: prompt }]
+            }],
             generationConfig: {
                 maxOutputTokens: 1000,
                 temperature: 0.5
@@ -208,26 +187,14 @@ Always be specific. Never give vague answers.`;
 
         let result: any = await Promise.race([apiPromise, timeoutPromise]);
         let response = await result.response;
-        const cleanResponse = (txt: string) => {
-          return txt.replace(/\*\*/g, "").replace(/\*/g, "").replace(/__/g, "").trim();
-        };
-        let text = cleanResponse(response.text());
-        console.log("CHATBOT RAW RESPONSE:", text);
+        const text = response.text();
+        const cleanText = text.replace(/[*#]/g, "");
 
-        if (text.length < 100) {
-            text += "\nThis beach is also known for its peaceful atmosphere, scenic beauty, and is suitable for tourists looking for relaxation.";
-        }
-
-        if (text.includes("I don't have information") || text.includes("I don’t have information")) {
-            text = "Here’s what I can suggest based on available data...";
-        }
-
-        res.json({ reply: text });
+        res.json({ reply: cleanText });
     } catch (error: any) {
-        if (error.message === "API Timeout") {
-            return res.json({ reply: "Here’s what I can suggest based on available data..." });
-        }
         console.error("Gemini API Error Full Stack:", error);
-        res.json({ reply: "Here’s what I can suggest based on available data..." });
+        res.status(500).json({
+            reply: "Unable to fetch response. Please try again."
+        });
     }
 };

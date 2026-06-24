@@ -11,9 +11,19 @@ export default function Recommendations() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const recommendedForUser = [...localBeaches]
-    .sort((a, b) => b.sustainabilityScore - a.sustainabilityScore)
-    .slice(0, 5);
+  let prefs: any = {};
+  try {
+    prefs = JSON.parse(localStorage.getItem("userPreferences") || "{}");
+  } catch(e) {}
+
+  const filteredBeaches = localBeaches.filter((beach: any) => {
+    return (
+      (!prefs.state || beach.state === prefs.state) &&
+      (!prefs.crowd || beach.crowd === prefs.crowd)
+    );
+  });
+
+  const recommendedForUser = filteredBeaches.slice(0, 5);
 
   const getCrowd = () => {
     const day = new Date().getDay();
@@ -64,17 +74,25 @@ export default function Recommendations() {
     });
     setBeaches(updated);
 
-    const sorted = [...updated].sort((a, b) => b.sustainabilityScore - a.sustainabilityScore);
-    const best = sorted[0];
+    const prefsStr = localStorage.getItem("userPreferences");
+    const p = prefsStr ? JSON.parse(prefsStr) : {};
+
+    const filtered = updated.filter((beach: any) => {
+      return (
+        (!p.state || beach.state === p.state) &&
+        (!p.crowd || beach.crowd === p.crowd)
+      );
+    });
+
+    const best = filtered.length > 0 ? filtered[0] : updated[0];
 
     if (best) {
       setRecommendedBeach({
         name: best.name,
         reason: [
+          "Matches your preferences",
           "Low crowd",
-          "Good weather",
-          "Safe conditions",
-          "High sustainability"
+          "Good weather"
         ]
       });
     }
@@ -212,13 +230,19 @@ export default function Recommendations() {
       </div>
 
       {/* Empty state */}
-      {recommendedForUser.length === 0 && (
-        <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
+      {(!prefs.state && !prefs.crowd && !prefs.travelType && !prefs.bestTime) ? (
+        <div className="card" style={{ textAlign: 'center', padding: '48px 24px', marginTop: 20 }}>
           <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-            Loading beach recommendations...
+            No preferences selected. Showing default recommendations.
           </p>
         </div>
-      )}
+      ) : recommendedForUser.length === 0 ? (
+        <div className="card" style={{ textAlign: 'center', padding: '48px 24px', marginTop: 20 }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
+            No beaches match your preferences. Try adjusting them!
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }
