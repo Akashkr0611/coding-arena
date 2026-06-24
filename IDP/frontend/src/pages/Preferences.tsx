@@ -1,4 +1,4 @@
-import { Sliders } from 'lucide-react';
+import { Sliders, Users, Camera, Compass, Shield } from 'lucide-react';
 import { usePreferences } from '../context/PreferencesContext';
 
 export default function Preferences() {
@@ -11,32 +11,50 @@ export default function Preferences() {
     }));
   };
 
+  const getButtonStyle = (active: boolean) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '12px',
+    padding: '20px',
+    borderRadius: '16px',
+    border: active ? '2px solid var(--teal)' : '2px solid var(--border)',
+    background: active ? 'rgba(11, 191, 169, 0.1)' : 'var(--card-bg)',
+    color: 'var(--text-primary)',
+    cursor: 'pointer',
+    fontWeight: 600,
+    fontSize: '16px',
+    transition: 'all 0.2s ease',
+    boxShadow: active ? '0 0 15px rgba(11, 191, 169, 0.2)' : 'none',
+    width: '100%'
+  });
+
   return (
     <div className="page-wrapper" style={{ padding: '24px', maxWidth: '600px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 className="header-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Sliders size={24} color="var(--teal)" /> Preferences
+      <div style={{ marginBottom: '32px', textAlign: 'center' }}>
+        <h1 className="header-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          <Sliders size={28} color="var(--teal)" /> Preferences
         </h1>
-        <p className="header-subtitle">Customize your beach recommendations</p>
+        <p className="header-subtitle">Customize your perfect beach getaway</p>
       </div>
 
-      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 500 }}>
-          <input type="checkbox" checked={preferences.lowCrowd} onChange={() => handleChange('lowCrowd')} style={{ transform: 'scale(1.2)' }} />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        <button style={getButtonStyle(preferences.lowCrowd)} onClick={() => handleChange('lowCrowd')}>
+          <Users size={22} color={preferences.lowCrowd ? "var(--teal)" : "var(--text-secondary)"} />
           Low Crowd
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 500 }}>
-          <input type="checkbox" checked={preferences.scenic} onChange={() => handleChange('scenic')} style={{ transform: 'scale(1.2)' }} />
+        </button>
+        <button style={getButtonStyle(preferences.scenic)} onClick={() => handleChange('scenic')}>
+          <Camera size={22} color={preferences.scenic ? "var(--teal)" : "var(--text-secondary)"} />
           Scenic
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 500 }}>
-          <input type="checkbox" checked={preferences.adventure} onChange={() => handleChange('adventure')} style={{ transform: 'scale(1.2)' }} />
+        </button>
+        <button style={getButtonStyle(preferences.adventure)} onClick={() => handleChange('adventure')}>
+          <Compass size={22} color={preferences.adventure ? "var(--teal)" : "var(--text-secondary)"} />
           Adventure
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 500 }}>
-          <input type="checkbox" checked={preferences.safe} onChange={() => handleChange('safe')} style={{ transform: 'scale(1.2)' }} />
+        </button>
+        <button style={getButtonStyle(preferences.safe)} onClick={() => handleChange('safe')}>
+          <Shield size={22} color={preferences.safe ? "var(--teal)" : "var(--text-secondary)"} />
           Safe
-        </label>
+        </button>
       </div>
     </div>
   );

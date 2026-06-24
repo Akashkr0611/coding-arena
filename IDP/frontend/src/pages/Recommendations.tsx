@@ -14,16 +14,21 @@ export default function Recommendations() {
 
   const { preferences } = usePreferences();
 
-  const filteredBeaches = localBeaches.filter((beach: any) => {
-    return (
-      (!preferences.lowCrowd || beach.crowd === "Low") &&
-      (!preferences.scenic || beach.scenic === true) &&
-      (!preferences.adventure || beach.adventure === true) &&
-      (!preferences.safe || beach.safe === true)
-    );
+  const scoredBeaches = localBeaches.map((beach: any) => {
+    let score = 0;
+    if (preferences.lowCrowd && beach.crowd === "Low") score++;
+    if (preferences.scenic && beach.scenic) score++;
+    if (preferences.adventure && beach.adventure) score++;
+    if (preferences.safe && beach.safe) score++;
+    return { ...beach, score };
   });
 
-  const recommendedForUser = filteredBeaches.slice(0, 5);
+  const sortedBeaches = [...scoredBeaches]
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10);
+
+  const recommendedForUser = sortedBeaches;
+  const hasPreferences = preferences.lowCrowd || preferences.scenic || preferences.adventure || preferences.safe;
 
   const getCrowd = () => {
     const day = new Date().getDay();
@@ -74,7 +79,7 @@ export default function Recommendations() {
     });
     setBeaches(updated);
 
-    const best = filteredBeaches.length > 0 ? filteredBeaches[0] : null;
+    const best = sortedBeaches.length > 0 ? sortedBeaches[0] : null;
 
     if (best) {
       setRecommendedBeach({
@@ -102,7 +107,11 @@ export default function Recommendations() {
       <div style={{ marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 className="header-title">Curated For You</h1>
-          <p className="header-subtitle">Intelligently matched based on real-time safety, weather, and beach sustainability.</p>
+          <p className="header-subtitle">
+            {hasPreferences 
+              ? "Showing best matches based on your preferences"
+              : "Intelligently matched based on real-time safety, weather, and beach sustainability."}
+          </p>
         </div>
       </div>
 
@@ -210,8 +219,8 @@ export default function Recommendations() {
                   paddingTop: 10,
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
-                  <span style={{ color: 'var(--aqua-light)', fontSize: 13, fontStyle: 'italic' }}>
-                    Top Recommendation
+                  <span style={{ color: 'var(--aqua-light)', fontSize: 13, fontStyle: 'italic', fontWeight: 600 }}>
+                    {hasPreferences ? `Match: ${item.score}/4` : "Top Recommendation"}
                   </span>
                   <ArrowRight size={16} color="var(--aqua-light)" />
                 </div>
@@ -221,20 +230,6 @@ export default function Recommendations() {
         })}
       </div>
 
-      {/* Empty state */}
-      {(!preferences.lowCrowd && !preferences.scenic && !preferences.adventure && !preferences.safe) ? (
-        <div className="card" style={{ textAlign: 'center', padding: '48px 24px', marginTop: 20 }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-            Select preferences to get recommendations
-          </p>
-        </div>
-      ) : recommendedForUser.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '48px 24px', marginTop: 20 }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-            No beaches match your preferences. Try adjusting them!
-          </p>
-        </div>
-      ) : null}
     </div>
   );
 }
